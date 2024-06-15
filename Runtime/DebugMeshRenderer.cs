@@ -22,12 +22,12 @@ namespace Platinio
 
         protected override void OnEnableEvent()
         {
-            RenderPipelineManager.endCameraRendering += OnPostRender;
+            RenderPipelineManager.endCameraRendering += OnEndCameraRendering;
         }
 
         protected override void OnDisableEvent()
         {
-            RenderPipelineManager.endCameraRendering -= OnPostRender;
+            RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
         }
 
         public void DrawSphere(Vector3 position, Quaternion rotation, float radius, Color color)
@@ -40,7 +40,7 @@ namespace Platinio
             meshDrawCalls.Add(new MeshDrawCall(cubeMesh, position, rotation, scale, color));
         }
 
-        public void OnPostRender(ScriptableRenderContext context, Camera camera)
+        public void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
         {
             foreach (var meshDrawCall in meshDrawCalls)
             {

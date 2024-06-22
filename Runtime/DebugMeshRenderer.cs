@@ -30,24 +30,26 @@ namespace Platinio
             RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
         }
 
-        public void DrawSphere(Vector3 position, Quaternion rotation, float radius, Color color)
+        public void DrawSphere(Vector3 position, Quaternion rotation, float radius, Color color, float duration = 0)
         {
-            meshDrawCalls.Add(new MeshDrawCall(sphereMesh, position, rotation, Vector3.one * (radius * 2.0f), color));
+            meshDrawCalls.Add(new MeshDrawCall(sphereMesh, position, rotation, Vector3.one * (radius * 2.0f), color, duration));
         }
         
-        public void DrawCube(Vector3 position, Quaternion rotation, Vector3 scale, Color color)
+        public void DrawCube(Vector3 position, Quaternion rotation, Vector3 scale, Color color, float duration = 0)
         {
-            meshDrawCalls.Add(new MeshDrawCall(cubeMesh, position, rotation, scale, color));
+            meshDrawCalls.Add(new MeshDrawCall(cubeMesh, position, rotation, scale, color, duration));
         }
 
         public void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
         {
-            foreach (var meshDrawCall in meshDrawCalls)
+            for (int i = meshDrawCalls.Count - 1; i >= 0; i--)
             {
-                meshDrawCall.Draw(material);
+                meshDrawCalls[i].Draw(material);
+                if (meshDrawCalls[i].Duration < 0)
+                {
+                    meshDrawCalls.RemoveAt(i);
+                }
             }
-            
-            meshDrawCalls.Clear();
         }
     }
 
@@ -58,18 +60,23 @@ namespace Platinio
         protected Quaternion rotation;
         protected Color color;
         protected Mesh mesh;
+        protected float duration;
 
-        public MeshDrawCall(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale, Color color)
+        public float Duration => duration;
+
+        public MeshDrawCall(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale, Color color, float duration)
         {
             this.mesh = mesh;
             this.position = position;
             this.scale = scale;
             this.rotation = rotation;
             this.color = color;
+            this.duration = duration;
         }
 
         public void Draw(Material material)
         {
+            duration -= Time.deltaTime;
             material.color = color;
             material.SetPass(0);
             var matrix = Matrix4x4.TRS(position, rotation, scale);

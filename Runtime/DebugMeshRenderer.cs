@@ -39,6 +39,11 @@ namespace Platinio
         {
             meshDrawCalls.Add(new MeshDrawCall(cubeMesh, position, rotation, scale, color, duration));
         }
+        
+        public void DrawQuad(Vector3 position, Quaternion rotation, Vector3 scale, Color color, float duration = 0)
+        {
+            meshDrawCalls.Add(new MeshDrawCall(quadMesh, position, rotation, scale, color, duration));
+        }
 
         public void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
         {

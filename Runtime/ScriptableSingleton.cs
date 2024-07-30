@@ -19,10 +19,11 @@ namespace Platinio
 
                     instance = Resources.Load<T>(typeof(T).Name);
                     instance.eventListener = monoBehaviorEventListener;
-
+                    
                     instance.eventListener.OnEnableEvent += instance.OnEnableEvent;
                     instance.eventListener.OnDisabledEvent += instance.OnDisableEvent;
                     instance.eventListener.OnDestroyEvent += instance.OnDestroyEventInternal;
+                    instance.eventListener.OnUpdateEvent += instance.OnUpdateEvent;
                     
                     instance.OnAwakeEvent();
                     instance.OnStartEvent();
@@ -57,6 +58,11 @@ namespace Platinio
 
         protected virtual void OnEnableEvent()
         {
+        }
+
+        protected virtual void OnUpdateEvent()
+        {
+            
         }
 
         protected virtual void OnDisableEvent()

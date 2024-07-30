@@ -8,10 +8,16 @@ namespace Platinio
         public event Action OnDestroyEvent;
         public event Action OnEnableEvent;
         public event Action OnDisabledEvent;
+        public event Action OnUpdateEvent;
 
         private void OnEnable()
         {
             OnEnableEvent?.Invoke();
+        }
+
+        private void Update()
+        {
+            OnUpdateEvent?.Invoke();
         }
 
         private void OnDisable()

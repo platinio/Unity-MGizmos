@@ -32,7 +32,19 @@ namespace Platinio
             RenderPipelineManager.beginCameraRendering -= OnEndCameraRendering;
             RenderPipelineManager.beginCameraRendering += OnEndCameraRendering;
             
-            GetInitialRenderCameras();
+            var cameras = GetInitialRenderCameras();
+            
+            foreach (var camera in cameras)
+            {
+                MonoBehaviorEventListener listener = camera.GetComponent<MonoBehaviorEventListener>();
+                if (listener == null) listener = camera.gameObject.AddComponent<MonoBehaviorEventListener>();
+
+                listener.OnUpdateEvent = null;
+                listener.OnUpdateEvent += () =>
+                {
+                    HandleCameraDrawCalls(camera);
+                };
+            }
         }
 
         private void SceneManagerOnsceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
@@ -41,7 +53,7 @@ namespace Platinio
             GetInitialRenderCameras();
         }
 
-        private void GetInitialRenderCameras()
+        private List<Camera> GetInitialRenderCameras()
         {
             var cameras = GetCameras();
              
@@ -53,6 +65,8 @@ namespace Platinio
             {
                 meshDrawCalls.Add(camera, new List<MeshDrawCall>());
             }
+
+            return cameras;
         }
 
         private void ClearVariables()
@@ -134,6 +148,11 @@ namespace Platinio
         }
 
         public void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
+        {
+            HandleCameraDrawCalls(camera);
+        }
+
+        private void HandleCameraDrawCalls(Camera camera)
         {
             if (!meshDrawCalls.TryGetValue(camera, out var drawCalls)) return;
             

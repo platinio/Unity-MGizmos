@@ -8,7 +8,7 @@ namespace Platinio
         public event Action OnDestroyEvent;
         public event Action OnEnableEvent;
         public event Action OnDisabledEvent;
-        public event Action OnUpdateEvent;
+        public Action OnUpdateEvent;
 
         private void OnEnable()
         {

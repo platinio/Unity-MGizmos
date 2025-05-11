@@ -13,9 +13,13 @@ MonoBehaviour:
   m_Name: DebugMeshRenderer
   m_EditorClassIdentifier: 
   material: {fileID: 2100000, guid: 0b769baafe8dbdb449ab8249e0d7e6ab, type: 2}
+  raycastMaterial: {fileID: 2100000, guid: c8ddef232ab0ab04e970ffff0946ef67, type: 2}
+  hitMaterial: {fileID: 2100000, guid: 4bc397d3c165d8f4dabea2b461a16f24, type: 2}
+  normalMaterial: {fileID: 2100000, guid: efa49d87597858e4aa445fde05a96bce, type: 2}
   sphereMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   capsuleMesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
   cubeMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
   cylinderMesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
   planeMesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
   quadMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
+  arrowHead: {fileID: 3613567641014311022, guid: 0ba93735bcb2f9044be5994aac454d02, type: 3}

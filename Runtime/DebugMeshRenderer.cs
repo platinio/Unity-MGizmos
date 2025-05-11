@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ArcaneOnyx;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -10,6 +11,9 @@ namespace Platinio
     public class DebugMeshRenderer : ScriptableSingleton<DebugMeshRenderer>
     {
         [SerializeField] private Material material;
+        [SerializeField] private Material raycastMaterial;
+        [SerializeField] private Material hitMaterial;
+        [SerializeField] private Material normalMaterial;
         
         [Header("Meshes")]
         [SerializeField] private Mesh sphereMesh;
@@ -18,6 +22,7 @@ namespace Platinio
         [SerializeField] private Mesh cylinderMesh;
         [SerializeField] private Mesh planeMesh;
         [SerializeField] private Mesh quadMesh;
+        [SerializeField] private Mesh arrowHead;
 
         private Dictionary<Camera, List<MeshDrawCall>> meshDrawCalls = new();
         private Camera lastActiveSceneViewCamera;
@@ -66,7 +71,22 @@ namespace Platinio
         {
             AddMeshDrawCall(new MeshDrawCall(sphereMesh, mat, position, rotation, Vector3.one * (radius * 2.0f), duration));
         }
+        
+        public void DrawCylinder(Vector3 position, Quaternion rotation, Vector3 scale, Material mat, float duration = 0)
+        {
+            AddMeshDrawCall(new MeshDrawCall(cylinderMesh, mat, position, rotation, scale, duration));
+        }
 
+        public void DrawArrow(Vector3 from, Vector3 to, float stemWidth, float arrowHeadSize, Material mat, float duration = 0)
+        {
+            float d = Vector3.Distance(from, to);
+            Vector3 dir = (to - from).normalized;
+            float headLength = arrowHeadSize;
+            
+            AddMeshDrawCall(new MeshDrawCall(cylinderMesh, mat, from + (dir * (d / 2.0f)) - (dir * (headLength / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(stemWidth, (d / 2.0f) - (headLength / 2.0f), stemWidth), duration));
+            AddMeshDrawCall(new MeshDrawCall(arrowHead, mat, to - (dir * headLength), Quaternion.FromToRotation(Vector3.up, dir) * Quaternion.Euler(-90, 0, 0), Vector3.one * arrowHeadSize, duration));
+        }
+        
         private void AddMeshDrawCall(MeshDrawCall meshDrawCall)
         {
             var cameras = meshDrawCalls.Keys;

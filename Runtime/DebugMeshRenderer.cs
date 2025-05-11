@@ -106,6 +106,11 @@ namespace Platinio
         {
             AddMeshDrawCall(new MeshDrawCall(quadMesh, CreateMaterial(), position, rotation, scale, color, duration));
         }
+        
+        public void DrawMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale, Material mat, float duration = 0)
+        {
+            AddMeshDrawCall(new MeshDrawCall(mesh, mat, position, rotation, scale, duration));
+        }
 
         private void DuringSceneGui(SceneView sceneView)
         {

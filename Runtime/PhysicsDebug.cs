@@ -10,9 +10,16 @@ namespace ArcaneOnyx
         private const float RaycastStemWidth = 0.0125f;
         private const float RaycastArrowHeadSize = 0.08f;
         
-        private const float NormalStemWidth = 0.0065f;
-        private const float NormalArrowHeadSize = 0.025f;
-        private const float NormalLength = 0.4f;
+        private const float NormalStemWidth = 0.015f;
+        private const float NormalArrowHeadSize = 0.05f;
+        private const float NormalLength = 0.9f;
+
+        private const float ContantPointSize = 0.065f;
+
+        private const float CollisionImpulseMultiplier = 2.5f;
+        
+        private const float VelocityStemWidth = 0.03f;
+        private const float VelocityArrowHeadSize = 0.1f;
 
         private const float FakeInfinity = 100000.0f;
 
@@ -506,7 +513,37 @@ namespace ArcaneOnyx
             return Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance, layerMask, queryTriggerInteraction);
 #endif
         }
-        
+
+        public static void DebugRigidBody(Rigidbody rb, float velocityScaler)
+        {
+            var mat = GetMaterial("Velocity");
+            DebugMeshRenderer.Instance.DrawArrow(rb.position, rb.position + (rb.velocity.normalized * rb.velocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize, mat);
+        }
+
+        public static void DrawCollision(Collision c, float duration)
+        {
+            DrawContactPoints(c.contacts, duration);
+        }
+
+        public static void DrawContactPoints(ContactPoint[] contactPoints, float duration)
+        {
+            foreach (var contactPoint in contactPoints)
+            {
+                DrawContactPoint(contactPoint, duration);
+            }
+        }
+
+        public static void DrawContactPoint(ContactPoint p, float duration)
+        {
+            DebugMeshRenderer.Instance.DrawSphere(p.point, Quaternion.identity, ContantPointSize, GetMaterial("ContactPoint"), duration);
+            
+            var normalMaterial = GetMaterial("NormalMaterial");
+            
+            Vector3 impulseEnd = p.point + (p.impulse.normalized * (p.impulse.magnitude * Time.fixedDeltaTime) * CollisionImpulseMultiplier);
+            DebugMeshRenderer.Instance.DrawArrow(p.point, impulseEnd, NormalStemWidth, NormalArrowHeadSize, normalMaterial, duration);
+            
+        }
+
         private static void DrawRay(Vector3 origin, Vector3 direction, float maxDistance)
         {
             DrawRay(new Ray(origin, direction), maxDistance);

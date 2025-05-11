@@ -14,6 +14,8 @@ namespace ArcaneOnyx
         private const float NormalArrowHeadSize = 0.025f;
         private const float NormalLength = 0.4f;
 
+        private const float FakeInfinity = 100000.0f;
+
         private static Dictionary<string, Material> cacheMaterials = new();
         
         public static int RaycastNonAlloc(Ray ray, RaycastHit[] results)
@@ -515,7 +517,7 @@ namespace ArcaneOnyx
             DrawRay(new Ray(origin, direction));
         }
 
-        private static void DrawRay(Ray ray, float maxDistance = float.PositiveInfinity)
+        private static void DrawRay(Ray ray, float maxDistance = FakeInfinity)
         {
             Vector3 rayEndPosition = ray.origin + (ray.direction * maxDistance);
             var raycastMaterial = GetMaterial("RaycastMaterial");

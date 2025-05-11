@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
@@ -24,107 +25,46 @@ namespace Platinio
 
         protected override void OnEnableEvent()
         {
-           ClearVariables();
+            Reset();
             
             SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
             SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
             
-            RenderPipelineManager.beginCameraRendering -= OnEndCameraRendering;
-            RenderPipelineManager.beginCameraRendering += OnEndCameraRendering;
+            //listen this for scriptable base pipelines
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
             
-            var cameras = GetInitialRenderCameras();
-            
-            foreach (var camera in cameras)
-            {
-                MonoBehaviorEventListener listener = camera.GetComponent<MonoBehaviorEventListener>();
-                if (listener == null) listener = camera.gameObject.AddComponent<MonoBehaviorEventListener>();
-
-                listener.OnUpdateEvent = null;
-                listener.OnUpdateEvent += () =>
-                {
-                    HandleCameraDrawCalls(camera);
-                };
-            }
+            //listen this for scene view render
+            SceneView.duringSceneGui -= DuringSceneGui;
+            SceneView.duringSceneGui += DuringSceneGui;
         }
 
+        private void OnDestroy()
+        {
+            RenderPipelineManager.endCameraRendering -= OnBeginCameraRendering;
+            SceneView.duringSceneGui -= DuringSceneGui;
+            SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
+        }
+        
         private void SceneManagerOnsceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
         {
-            ClearVariables();   
-            GetInitialRenderCameras();
+            Reset();
         }
 
-        private List<Camera> GetInitialRenderCameras()
-        {
-            var cameras = GetCameras();
-             
-#if UNITY_EDITOR
-            lastActiveSceneViewCamera = UnityEditor.SceneView.lastActiveSceneView.camera;
-#endif
-            
-            foreach (var camera in cameras)
-            {
-                meshDrawCalls.Add(camera, new List<MeshDrawCall>());
-            }
-
-            return cameras;
-        }
-
-        private void ClearVariables()
+        private void Reset()
         {
             meshDrawCalls.Clear();
             materialPool.Clear();
-            lastActiveSceneViewCamera = null;
-        }
-
-        protected override void OnUpdateEvent()
-        {
-            //update scene view camera
-            #if UNITY_EDITOR
-            if (UnityEditor.SceneView.lastActiveSceneView == null) return;
-            if (lastActiveSceneViewCamera != UnityEditor.SceneView.lastActiveSceneView.camera)
-            {
-                meshDrawCalls.Remove(lastActiveSceneViewCamera);
-                lastActiveSceneViewCamera = UnityEditor.SceneView.lastActiveSceneView.camera;
-                meshDrawCalls.Add(lastActiveSceneViewCamera, new List<MeshDrawCall>());
-                
-            }
-            #endif
-
-            //add newly created cameras
-            var cameras = Camera.allCameras;
-            foreach (var camera in cameras)
-            {
-                if (!meshDrawCalls.ContainsKey(camera))
-                {
-                    meshDrawCalls.Add(camera, new List<MeshDrawCall>());
-                }
-            }
-        }
-
-        private List<Camera> GetCameras()
-        {
-            List<Camera> cameras = new List<Camera>();
-            
-            #if UNITY_EDITOR
-            cameras.Add(UnityEditor.SceneView.lastActiveSceneView.camera);
-            #endif
-
-            foreach (var camera in Camera.allCameras)
-            {
-                cameras.Add(camera);
-            }
-
-            return cameras;
-        }
-        
-        protected override void OnDisableEvent()
-        {
-            RenderPipelineManager.endCameraRendering -= OnEndCameraRendering;
         }
 
         public void DrawSphere(Vector3 position, Quaternion rotation, float radius, Color color, float duration = 0)
         {
             AddMeshDrawCall(new MeshDrawCall(sphereMesh, CreateMaterial(), position, rotation, Vector3.one * (radius * 2.0f), color, duration));
+        }
+        
+        public void DrawSphere(Vector3 position, Quaternion rotation, float radius, Material mat, float duration = 0)
+        {
+            AddMeshDrawCall(new MeshDrawCall(sphereMesh, mat, position, rotation, Vector3.one * (radius * 2.0f), duration));
         }
 
         private void AddMeshDrawCall(MeshDrawCall meshDrawCall)
@@ -147,14 +87,24 @@ namespace Platinio
             AddMeshDrawCall(new MeshDrawCall(quadMesh, CreateMaterial(), position, rotation, scale, color, duration));
         }
 
-        public void OnEndCameraRendering(ScriptableRenderContext context, Camera camera)
+        private void DuringSceneGui(SceneView sceneView)
+        {
+            HandleCameraDrawCalls(sceneView.camera);
+        }
+
+        private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
             HandleCameraDrawCalls(camera);
         }
 
-        private void HandleCameraDrawCalls(Camera camera)
+        public void HandleCameraDrawCalls(Camera camera)
         {
-            if (!meshDrawCalls.TryGetValue(camera, out var drawCalls)) return;
+            //if the camera doesnt exist add it
+            if (!meshDrawCalls.TryGetValue(camera, out var drawCalls))
+            {
+                meshDrawCalls.Add(camera, new List<MeshDrawCall>());
+                return;
+            }
             
             for (int i = drawCalls.Count - 1; i >= 0; i--)
             {

@@ -1,3 +1,4 @@
+using UnityEditor;
 using UnityEngine;
 
 namespace Platinio
@@ -15,7 +16,11 @@ namespace Platinio
                     MonoBehaviorEventListener monoBehaviorEventListener =
                         new GameObject("", typeof(MonoBehaviorEventListener)).GetComponent<MonoBehaviorEventListener>();
                     monoBehaviorEventListener.gameObject.hideFlags |= HideFlags.HideInHierarchy;
-                    DontDestroyOnLoad(monoBehaviorEventListener.gameObject);
+
+                    if (EditorApplication.isPlaying)
+                    {
+                        DontDestroyOnLoad(monoBehaviorEventListener.gameObject);
+                    }
 
                     instance = Resources.Load<T>(typeof(T).Name);
                     instance.eventListener = monoBehaviorEventListener;

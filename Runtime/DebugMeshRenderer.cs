@@ -10,10 +10,8 @@ namespace Platinio
     [CreateAssetMenu(menuName = "Singletons/Debug Mesh Renderer")]
     public class DebugMeshRenderer : ScriptableSingleton<DebugMeshRenderer>
     {
-        [SerializeField] private Material material;
-        [SerializeField] private Material raycastMaterial;
-        [SerializeField] private Material hitMaterial;
-        [SerializeField] private Material normalMaterial;
+        [SerializeField] private Material defaultMaterial;
+        [SerializeField] private Color defaultColor;
         
         [Header("Meshes")]
         [SerializeField] private Mesh sphereMesh;
@@ -24,10 +22,8 @@ namespace Platinio
         [SerializeField] private Mesh quadMesh;
         [SerializeField] private Mesh arrowHead;
 
-        private Dictionary<Camera, List<MeshDrawCall>> meshDrawCalls = new();
-        private Camera lastActiveSceneViewCamera;
-        private List<Material> materialPool = new List<Material>();
-
+        private Dictionary<Camera, List<BaseMeshDrawCall>> meshDrawCalls = new();
+      
         protected override void OnEnableEvent()
         {
             Reset();
@@ -59,36 +55,56 @@ namespace Platinio
         private void Reset()
         {
             meshDrawCalls.Clear();
-            materialPool.Clear();
         }
 
-        public void DrawSphere(Vector3 position, Quaternion rotation, float radius, Color color, float duration = 0)
+        public BaseMeshDrawCall DrawSphere(Vector3 position, float radius)
         {
-            AddMeshDrawCall(new MeshDrawCall(sphereMesh, CreateMaterial(), position, rotation, Vector3.one * (radius * 2.0f), color, duration));
+            MeshDrawCall drawCall = new MeshDrawCall(sphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
+            AddMeshDrawCall(drawCall);
+            return drawCall;
         }
         
-        public void DrawSphere(Vector3 position, Quaternion rotation, float radius, Material mat, float duration = 0)
+        public BaseMeshDrawCall DrawCylinder(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            AddMeshDrawCall(new MeshDrawCall(sphereMesh, mat, position, rotation, Vector3.one * (radius * 2.0f), duration));
-        }
-        
-        public void DrawCylinder(Vector3 position, Quaternion rotation, Vector3 scale, Material mat, float duration = 0)
-        {
-            AddMeshDrawCall(new MeshDrawCall(cylinderMesh, mat, position, rotation, scale, duration));
+            MeshDrawCall drawCall = new MeshDrawCall(cylinderMesh, position, rotation, scale);
+            AddMeshDrawCall(drawCall);
+            return drawCall;
         }
 
-        public void DrawArrow(Vector3 from, Vector3 to, float stemWidth, float arrowHeadSize, Material mat, float duration = 0)
+        public BaseMeshDrawCall DrawArrow(Vector3 from, Vector3 to, float stemWidth, float arrowHeadSize)
         {
+            var compositeMeshDrawCall = new CompositeMeshDrawCall();
+            
             float d = Vector3.Distance(from, to);
             Vector3 dir = (to - from).normalized;
             float headLength = arrowHeadSize;
+
+            MeshDrawCall cylinderDrawCall = new MeshDrawCall(cylinderMesh, from + (dir * (d / 2.0f)) - (dir * (headLength / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(stemWidth, (d / 2.0f) - (headLength / 2.0f), stemWidth));
+            MeshDrawCall arrowHeadDrawCall = new MeshDrawCall(arrowHead, to - (dir * headLength), Quaternion.FromToRotation(Vector3.up, dir) * Quaternion.Euler(-90, 0, 0), Vector3.one * arrowHeadSize);
             
-            AddMeshDrawCall(new MeshDrawCall(cylinderMesh, mat, from + (dir * (d / 2.0f)) - (dir * (headLength / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(stemWidth, (d / 2.0f) - (headLength / 2.0f), stemWidth), duration));
-            AddMeshDrawCall(new MeshDrawCall(arrowHead, mat, to - (dir * headLength), Quaternion.FromToRotation(Vector3.up, dir) * Quaternion.Euler(-90, 0, 0), Vector3.one * arrowHeadSize, duration));
+            compositeMeshDrawCall.AddDrawCall(cylinderDrawCall);
+            compositeMeshDrawCall.AddDrawCall(arrowHeadDrawCall);
+            AddMeshDrawCall(compositeMeshDrawCall);
+            
+            return compositeMeshDrawCall;
         }
         
-        private void AddMeshDrawCall(MeshDrawCall meshDrawCall)
+        public BaseMeshDrawCall RenderLine(Vector3 from, Vector3 to, float lineWidth)
         {
+            float d = Vector3.Distance(from, to);
+            Vector3 dir = (to - from).normalized;
+
+            MeshDrawCall drawCall = new MeshDrawCall(cylinderMesh, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
+            AddMeshDrawCall(drawCall);
+
+            return drawCall;
+        }
+        
+        private void AddMeshDrawCall(BaseMeshDrawCall meshDrawCall)
+        {
+            meshDrawCall.SetColor(defaultColor)
+                .SetMaterial(defaultMaterial);
+            
             var cameras = meshDrawCalls.Keys;
 
             foreach (var camera in cameras)
@@ -97,62 +113,102 @@ namespace Platinio
             }
         }
 
-        public void DrawCube(Vector3 position, Quaternion rotation, Vector3 scale, Color color, float duration = 0)
+        public BaseMeshDrawCall DrawCube(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            AddMeshDrawCall(new MeshDrawCall(cubeMesh, CreateMaterial(), position, rotation, scale, color, duration));
+            MeshDrawCall drawCall = new MeshDrawCall(cubeMesh, position, rotation, scale);
+            AddMeshDrawCall(drawCall);
+
+            return drawCall;
         }
         
-        public void DrawQuad(Vector3 position, Quaternion rotation, Vector3 scale, Color color, float duration = 0)
+        public BaseMeshDrawCall DrawQuad(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            AddMeshDrawCall(new MeshDrawCall(quadMesh, CreateMaterial(), position, rotation, scale, color, duration));
+            MeshDrawCall drawCall = new MeshDrawCall(quadMesh, position, rotation, scale);
+            AddMeshDrawCall(drawCall);
+
+            return drawCall;
         }
         
-        public void DrawMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale, Material mat, float duration = 0)
+        public BaseMeshDrawCall DrawMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            AddMeshDrawCall(new MeshDrawCall(mesh, mat, position, rotation, scale, duration));
+            MeshDrawCall drawCall = new MeshDrawCall(mesh, position, rotation, scale);
+            AddMeshDrawCall(drawCall);
+
+            return drawCall;
+        }
+
+        public BaseMeshDrawCall RenderCircle(Vector3 center, int sides, float radius)
+        {
+            return RenderCircle(center, sides, radius, 0.01f, Vector3.up);
+        }
+
+        public BaseMeshDrawCall RenderCircle(Vector3 center, int sides, float radius, float lineWidth, Vector3 upwards)
+        {
+            var compositeMeshDrawCall = new CompositeMeshDrawCall();
+            
+            Vector3[] positions = new Vector3[sides];
+            Vector3 right = Quaternion.Euler(0, 0, 90) * upwards;
+            Vector3 forward = Vector3.Cross(upwards, right);
+            
+            for (int currentSide = 0; currentSide < sides; currentSide++)
+            {
+                float p = (float) currentSide / sides;
+                float currentRadian = p * 2 * Mathf.PI;
+
+                float xScaled = Mathf.Cos(currentRadian);
+                float yScaled = Mathf.Sin(currentRadian);
+
+                float x = xScaled * radius;
+                float y = yScaled * radius;
+
+                Vector3 position = center;
+                position += right * x;
+                position += forward * y;
+
+                positions[currentSide] = position;
+            }
+
+            for (int i = 1; i < positions.Length; i++)
+            {
+                Vector3 dir = (positions[i] - positions[i - 1]).normalized;
+                var dc = RenderLine(positions[i - 1], positions[i] + (dir * 0.01f), lineWidth);
+                compositeMeshDrawCall.AddDrawCall(dc);
+            }
+            
+            var lastDC = RenderLine(positions[positions.Length - 1], positions[0], lineWidth);
+            compositeMeshDrawCall.AddDrawCall(lastDC);
+            
+            return compositeMeshDrawCall;
         }
 
         private void DuringSceneGui(SceneView sceneView)
         {
-            HandleCameraDrawCalls(sceneView.camera);
+            HandleCameraDrawCalls(sceneView.camera, 1 / 30.0f);
         }
 
         private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
-            HandleCameraDrawCalls(camera);
+            HandleCameraDrawCalls(camera, Time.deltaTime);
         }
 
-        public void HandleCameraDrawCalls(Camera camera)
+        public void HandleCameraDrawCalls(Camera camera, float deltaTime)
         {
             //if the camera doesnt exist add it
             if (!meshDrawCalls.TryGetValue(camera, out var drawCalls))
             {
-                meshDrawCalls.Add(camera, new List<MeshDrawCall>());
+                meshDrawCalls.Add(camera, new List<BaseMeshDrawCall>());
                 return;
             }
             
             for (int i = drawCalls.Count - 1; i >= 0; i--)
             {
-                drawCalls[i].Draw(camera);
-                if (drawCalls[i].Duration < 0)
+                drawCalls[i].Draw(camera, deltaTime);
+                
+                if (drawCalls[i].RemainingTime < 0)
                 {
-                    if (!materialPool.Contains(drawCalls[i].Material)) materialPool.Add(drawCalls[i].Material);
                     drawCalls.RemoveAt(i);
                 }
             }
-        }
-
-        private Material CreateMaterial()
-        {
-            if (materialPool.Count > 0)
-            {
-                var m = materialPool[0];
-                materialPool.RemoveAt(0);
-                return m;
-            }
-
-            var newMat = Instantiate(material);
-            return newMat;
         }
     }
 }

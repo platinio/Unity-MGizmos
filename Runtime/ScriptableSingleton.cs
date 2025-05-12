@@ -48,8 +48,11 @@ namespace Platinio
             eventListener.OnDestroyEvent -= OnDestroyEvent;
             eventListener.OnEnableEvent -= OnEnableEvent;
             eventListener.OnDisabledEvent -= OnDisableEvent;
-            
-            Destroy(eventListener.gameObject);
+
+            if (EditorApplication.isPlaying)
+            {
+                Destroy(eventListener.gameObject);
+            }
         }
 
         protected virtual void OnAwakeEvent()

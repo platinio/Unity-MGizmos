@@ -16,7 +16,8 @@ public class RangeSample : MonoBehaviour
     private void OnDrawGizmos()
     {
         //DebugMeshRenderer.Instance.DrawSphere(transform.position, Quaternion.identity, range, material);
-        DebugMeshRenderer.Instance.DrawCylinder(transform.position, Quaternion.Euler(rot) , scale, material);
+        var dc = DebugMeshRenderer.Instance.DrawCylinder(transform.position, Quaternion.Euler(rot) , scale);
+        dc.SetMaterial(material);
         //RenderTest.RenderEvent?.Invoke(SceneView.lastActiveSceneView.camera);
     }
 }

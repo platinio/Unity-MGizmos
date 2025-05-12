@@ -12,10 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bbe5ae6a1b63a8149ad6eb764e17dbbd, type: 3}
   m_Name: DebugMeshRenderer
   m_EditorClassIdentifier: 
-  material: {fileID: 2100000, guid: 0b769baafe8dbdb449ab8249e0d7e6ab, type: 2}
-  raycastMaterial: {fileID: 2100000, guid: c8ddef232ab0ab04e970ffff0946ef67, type: 2}
-  hitMaterial: {fileID: 2100000, guid: 4bc397d3c165d8f4dabea2b461a16f24, type: 2}
-  normalMaterial: {fileID: 2100000, guid: efa49d87597858e4aa445fde05a96bce, type: 2}
+  defaultMaterial: {fileID: 0}
+  defaultColor: {r: 1, g: 0, b: 0, a: 1}
   sphereMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   capsuleMesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
   cubeMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}

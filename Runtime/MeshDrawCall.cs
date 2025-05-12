@@ -1,44 +1,56 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Platinio
+namespace ArcaneOnyx
 {
-    public class MeshDrawCall
+    public class MeshDrawCall : BaseMeshDrawCall
     {
         protected Vector3 position;
         protected Vector3 scale;
         protected Quaternion rotation;
-        protected Color? color;
+        protected Color color;
         protected Mesh mesh;
         protected float duration;
         protected Material material;
+        private static readonly int ColorPropertyId = Shader.PropertyToID("_Color");
 
-        public float Duration => duration;
+        public override float RemainingTime => duration;
         public Material Material => material;
 
-        public MeshDrawCall(Mesh mesh, Material material, Vector3 position, Quaternion rotation, Vector3 scale, Color color, float duration)
-        {
-            this.mesh = mesh;
-            this.material = material;
-            this.position = position;
-            this.scale = scale;
-            this.rotation = rotation;
-            this.color = color;
-            this.duration = duration;
-        }
+        private float timer;
         
-        public MeshDrawCall(Mesh mesh, Material material, Vector3 position, Quaternion rotation, Vector3 scale, float duration)
+        public MeshDrawCall()
         {
-            this.mesh = mesh;
-            this.material = material;
-            this.position = position;
-            this.scale = scale;
-            this.rotation = rotation;
-            color = null;
-            this.duration = duration;
         }
 
-        public void Draw(Camera camera)
+        public MeshDrawCall(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
+        {
+            this.mesh = mesh;
+            this.position = position;
+            this.scale = scale;
+            this.rotation = rotation;
+            this.duration = 0;
+        }
+
+        public override BaseMeshDrawCall SetMaterial(Material material)
+        {
+            this.material = material;
+            return this;
+        }
+
+        public override BaseMeshDrawCall SetColor(Color color)
+        {
+            this.color = color;
+            return this;
+        }
+
+        public override BaseMeshDrawCall SetDuration(float duration)
+        {
+            this.duration = duration;
+            return this;
+        }
+
+        public override void Draw(Camera camera, float deltaTime)
         {
             if (camera == null || material == null)
             {
@@ -46,11 +58,13 @@ namespace Platinio
                 return;
             }
            
-            duration -= Time.deltaTime;
-            if (color.HasValue) material.color = color.Value;
+            duration -= deltaTime;
             var matrix = Matrix4x4.TRS(position, rotation, scale);
-           
-            Graphics.DrawMesh(mesh, matrix, material, 0, camera, 0, new MaterialPropertyBlock(), ShadowCastingMode.On, true);
+
+            MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
+            propertyBlock.SetColor(ColorPropertyId, color);
+            
+            Graphics.DrawMesh(mesh, matrix, material, 0, camera, 0, propertyBlock, ShadowCastingMode.On, true);
         }
     }
 }

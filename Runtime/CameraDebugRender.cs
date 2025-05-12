@@ -13,7 +13,7 @@ namespace Platinio
 
         private void Update()
         {
-            DebugMeshRenderer.Instance.HandleCameraDrawCalls(renderCamera);
+            DebugMeshRenderer.Instance.HandleCameraDrawCalls(renderCamera, Time.deltaTime);
         }
     }
 }

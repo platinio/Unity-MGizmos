@@ -517,7 +517,9 @@ namespace ArcaneOnyx
         public static void DebugRigidBody(Rigidbody rb, float velocityScaler)
         {
             var mat = GetMaterial("Velocity");
-            DebugMeshRenderer.Instance.DrawArrow(rb.position, rb.position + (rb.velocity.normalized * rb.velocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize, mat);
+            var dc = DebugMeshRenderer.Instance.DrawArrow(rb.position, rb.position + (rb.velocity.normalized * rb.velocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize);
+            dc.SetMaterial(mat);
+            dc.SetColor(mat.color);
         }
 
         public static void DrawCollision(Collision c, float duration)
@@ -535,13 +537,18 @@ namespace ArcaneOnyx
 
         public static void DrawContactPoint(ContactPoint p, float duration)
         {
-            DebugMeshRenderer.Instance.DrawSphere(p.point, Quaternion.identity, ContantPointSize, GetMaterial("ContactPoint"), duration);
+            var contactPointMaterial = GetMaterial("ContactPoint");
+            var dc = DebugMeshRenderer.Instance.DrawSphere(p.point, ContantPointSize);
+            dc.SetMaterial(contactPointMaterial);
+            dc.SetDuration(duration);
+            dc.SetColor(contactPointMaterial.color);
             
             var normalMaterial = GetMaterial("NormalMaterial");
-            
             Vector3 impulseEnd = p.point + (p.impulse.normalized * (p.impulse.magnitude * Time.fixedDeltaTime) * CollisionImpulseMultiplier);
-            DebugMeshRenderer.Instance.DrawArrow(p.point, impulseEnd, NormalStemWidth, NormalArrowHeadSize, normalMaterial, duration);
-            
+            dc = DebugMeshRenderer.Instance.DrawArrow(p.point, impulseEnd, NormalStemWidth, NormalArrowHeadSize);
+            dc.SetMaterial(normalMaterial);
+            dc.SetDuration(duration);
+            dc.SetColor(normalMaterial.color);
         }
 
         private static void DrawRay(Vector3 origin, Vector3 direction, float maxDistance)
@@ -557,9 +564,11 @@ namespace ArcaneOnyx
         private static void DrawRay(Ray ray, float maxDistance = FakeInfinity)
         {
             Vector3 rayEndPosition = ray.origin + (ray.direction * maxDistance);
-            var raycastMaterial = GetMaterial("RaycastMaterial");
             
-            DebugMeshRenderer.Instance.DrawArrow(ray.origin, rayEndPosition, RaycastStemWidth, RaycastArrowHeadSize, raycastMaterial);
+            var raycastMaterial = GetMaterial("RaycastMaterial");
+            var dc = DebugMeshRenderer.Instance.DrawArrow(ray.origin, rayEndPosition, RaycastStemWidth, RaycastArrowHeadSize);
+            dc.SetMaterial(raycastMaterial);
+            dc.SetColor(raycastMaterial.color);
         }
 
         private static void DrawRaycastHit(RaycastHit hit)
@@ -568,8 +577,13 @@ namespace ArcaneOnyx
             var normalMaterial = GetMaterial("NormalMaterial");
             Vector3 normalEnd = hit.point + (hit.normal.normalized * NormalLength);
             
-            DebugMeshRenderer.Instance.DrawSphere(hit.point, Quaternion.identity, RaycastHitSize, hitMaterial);
-            DebugMeshRenderer.Instance.DrawArrow(hit.point, normalEnd, NormalStemWidth, NormalArrowHeadSize, normalMaterial);
+            var dc = DebugMeshRenderer.Instance.DrawSphere(hit.point, RaycastHitSize);
+            dc.SetMaterial(hitMaterial);
+            dc.SetColor(hitMaterial.color);
+            
+            dc = DebugMeshRenderer.Instance.DrawArrow(hit.point, normalEnd, NormalStemWidth, NormalArrowHeadSize);
+            dc.SetMaterial(normalMaterial);
+            dc.SetColor(normalMaterial.color);
         }
 
         private static Material GetMaterial(string materialName)

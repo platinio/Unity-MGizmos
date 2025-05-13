@@ -1,5 +1,4 @@
-﻿using Platinio;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace ArcaneOnyx
 {
@@ -14,7 +13,7 @@ namespace ArcaneOnyx
         
         private void OnDrawGizmos()
         {
-            var dc = DebugMeshRenderer.Instance.RenderCircle(transform.position, sides, radius);
+            var dc = DebugMeshRenderer.RenderCircle(transform.position, sides, radius);
             dc.SetMaterial(material);
             dc.SetColor(color);
         }

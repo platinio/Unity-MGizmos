@@ -9,10 +9,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bbe5ae6a1b63a8149ad6eb764e17dbbd, type: 3}
-  m_Name: DebugMeshRenderer
+  m_Script: {fileID: 11500000, guid: 7aca808767654c73ba67d4dc57101da7, type: 3}
+  m_Name: DebugMeshRendererConfig
   m_EditorClassIdentifier: 
-  defaultMaterial: {fileID: 0}
+  defaultMaterial: {fileID: 2100000, guid: b9a48de0172d16949833d3c571249788, type: 2}
   defaultColor: {r: 1, g: 0, b: 0, a: 1}
   sphereMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
   capsuleMesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}

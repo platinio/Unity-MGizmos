@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using ArcaneOnyx;
 using Platinio;
 using UnityEditor;
 using UnityEngine;
@@ -16,7 +17,7 @@ public class RangeSample : MonoBehaviour
     private void OnDrawGizmos()
     {
         //DebugMeshRenderer.Instance.DrawSphere(transform.position, Quaternion.identity, range, material);
-        var dc = DebugMeshRenderer.Instance.DrawCylinder(transform.position, Quaternion.Euler(rot) , scale);
+        var dc = DebugMeshRenderer.DrawCylinder(transform.position, Quaternion.Euler(rot) , scale);
         dc.SetMaterial(material);
         //RenderTest.RenderEvent?.Invoke(SceneView.lastActiveSceneView.camera);
     }

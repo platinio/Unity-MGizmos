@@ -1,3 +1,4 @@
+using ArcaneOnyx;
 using UnityEngine;
 
 namespace Platinio
@@ -13,7 +14,7 @@ namespace Platinio
 
         private void Update()
         {
-            DebugMeshRenderer.Instance.HandleCameraDrawCalls(renderCamera, Time.deltaTime);
+            DebugMeshRenderer.HandleCameraDrawCalls(renderCamera, Time.deltaTime);
         }
     }
 }

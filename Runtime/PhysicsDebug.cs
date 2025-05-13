@@ -23,14 +23,19 @@ namespace ArcaneOnyx
 
         private const float FakeInfinity = 100000.0f;
 
-        private static Dictionary<string, Material> cacheMaterials = new();
+        private static Color RaycastColor = new Color(9.0f / 255, 180.0f / 255, 0, 177.0f / 255);
+        private static Color HitColor = new Color(1, 52.0f / 255, 0, 177.0f / 255);
+        private static Color NormalColor = new Color(0, 128.0f / 255, 112.0f / 255);
+        private static Color ContactPointColor = new Color(1, 52.0f / 255, 0, 177.0f / 255);
+        private static Color VelocityColor = new Color(9.0f / 255, 180.0f / 255, 0, 177.0f / 255);
+    
         
         public static int RaycastNonAlloc(Ray ray, RaycastHit[] results)
         {
 #if UNITY_EDITOR
             int size = Physics.RaycastNonAlloc(ray, results);
             DrawRay(ray);
-
+           
             for (int i = 0; i < size; i++)
             {
                 DrawRaycastHit(results[i]);
@@ -516,10 +521,10 @@ namespace ArcaneOnyx
 
         public static void DebugRigidBody(Rigidbody rb, float velocityScaler)
         {
-            var mat = GetMaterial("Velocity");
-            var dc = DebugMeshRenderer.Instance.DrawArrow(rb.position, rb.position + (rb.velocity.normalized * rb.velocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize);
+            var mat = DebugMeshRenderer.GUIText;
+            var dc = DebugMeshRenderer.DrawArrow(rb.position, rb.position + (rb.velocity.normalized * rb.velocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize);
             dc.SetMaterial(mat);
-            dc.SetColor(mat.color);
+            dc.SetColor(VelocityColor);
         }
 
         public static void DrawCollision(Collision c, float duration)
@@ -537,18 +542,18 @@ namespace ArcaneOnyx
 
         public static void DrawContactPoint(ContactPoint p, float duration)
         {
-            var contactPointMaterial = GetMaterial("ContactPoint");
-            var dc = DebugMeshRenderer.Instance.DrawSphere(p.point, ContantPointSize);
+            var contactPointMaterial = DebugMeshRenderer.Config.DefaultMaterial;
+            var dc = DebugMeshRenderer.DrawSphere(p.point, ContantPointSize);
             dc.SetMaterial(contactPointMaterial);
             dc.SetDuration(duration);
-            dc.SetColor(contactPointMaterial.color);
+            dc.SetColor(ContactPointColor);
             
-            var normalMaterial = GetMaterial("NormalMaterial");
+            var normalMaterial = DebugMeshRenderer.ParticlesStandardUnlit;
             Vector3 impulseEnd = p.point + (p.impulse.normalized * (p.impulse.magnitude * Time.fixedDeltaTime) * CollisionImpulseMultiplier);
-            dc = DebugMeshRenderer.Instance.DrawArrow(p.point, impulseEnd, NormalStemWidth, NormalArrowHeadSize);
+            dc = DebugMeshRenderer.DrawArrow(p.point, impulseEnd, NormalStemWidth, NormalArrowHeadSize);
             dc.SetMaterial(normalMaterial);
             dc.SetDuration(duration);
-            dc.SetColor(normalMaterial.color);
+            dc.SetColor(NormalColor);
         }
 
         private static void DrawRay(Vector3 origin, Vector3 direction, float maxDistance)
@@ -565,33 +570,24 @@ namespace ArcaneOnyx
         {
             Vector3 rayEndPosition = ray.origin + (ray.direction * maxDistance);
             
-            var raycastMaterial = GetMaterial("RaycastMaterial");
-            var dc = DebugMeshRenderer.Instance.DrawArrow(ray.origin, rayEndPosition, RaycastStemWidth, RaycastArrowHeadSize);
-            dc.SetMaterial(raycastMaterial);
-            dc.SetColor(raycastMaterial.color);
+            var dc = DebugMeshRenderer.DrawArrow(ray.origin, rayEndPosition, RaycastStemWidth, RaycastArrowHeadSize);
+            dc.SetMaterial(DebugMeshRenderer.ParticlesStandardUnlit);
+            dc.SetColor(RaycastColor);
         }
 
         private static void DrawRaycastHit(RaycastHit hit)
         {
-            var hitMaterial = GetMaterial("HitMaterial");
-            var normalMaterial = GetMaterial("NormalMaterial");
+            var hitMaterial = DebugMeshRenderer.GUIText;
+            var normalMaterial = DebugMeshRenderer.ParticlesStandardUnlit;
             Vector3 normalEnd = hit.point + (hit.normal.normalized * NormalLength);
             
-            var dc = DebugMeshRenderer.Instance.DrawSphere(hit.point, RaycastHitSize);
+            var dc = DebugMeshRenderer.DrawSphere(hit.point, RaycastHitSize);
             dc.SetMaterial(hitMaterial);
-            dc.SetColor(hitMaterial.color);
+            dc.SetColor(HitColor);
             
-            dc = DebugMeshRenderer.Instance.DrawArrow(hit.point, normalEnd, NormalStemWidth, NormalArrowHeadSize);
+            dc = DebugMeshRenderer.DrawArrow(hit.point, normalEnd, NormalStemWidth, NormalArrowHeadSize);
             dc.SetMaterial(normalMaterial);
-            dc.SetColor(normalMaterial.color);
-        }
-
-        private static Material GetMaterial(string materialName)
-        {
-            if (cacheMaterials.TryGetValue(materialName, out var mat)) return mat;
-
-            cacheMaterials[materialName] = Resources.Load<Material>(materialName);
-            return cacheMaterials[materialName];
+            dc.SetColor(NormalColor);
         }
     }
 }

@@ -1,5 +1,4 @@
-﻿using Platinio;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace ArcaneOnyx
 {
@@ -19,7 +18,7 @@ namespace ArcaneOnyx
             if (timer < delta) return;
 
             timer = 0;
-            DebugMeshRenderer.Instance.DrawMesh(mesh, transform.position, transform.rotation, scale)
+            DebugMeshRenderer.DrawMesh(mesh, transform.position, transform.rotation, scale)
                 .SetDuration(duration)
                 .SetMaterial(material);
 

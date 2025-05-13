@@ -1,33 +1,48 @@
 using System.Collections.Generic;
-using ArcaneOnyx;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
-namespace Platinio
+namespace ArcaneOnyx
 {
-    [CreateAssetMenu(menuName = "Singletons/Debug Mesh Renderer")]
-    public class DebugMeshRenderer : ScriptableSingleton<DebugMeshRenderer>
+    public static class DebugMeshRenderer
     {
-        [SerializeField] private Material defaultMaterial;
-        [SerializeField] private Color defaultColor;
+        public static DebugMeshRendererConfig Config => DebugMeshRendererConfig.Instance;
         
-        [Header("Meshes")]
-        [SerializeField] private Mesh sphereMesh;
-        [SerializeField] private Mesh capsuleMesh;
-        [SerializeField] private Mesh cubeMesh;
-        [SerializeField] private Mesh cylinderMesh;
-        [SerializeField] private Mesh planeMesh;
-        [SerializeField] private Mesh quadMesh;
-        [SerializeField] private Mesh arrowHead;
+        private static Dictionary<Camera, List<BaseMeshDrawCall>> meshDrawCalls = new();
 
-        private Dictionary<Camera, List<BaseMeshDrawCall>> meshDrawCalls = new();
-      
-        protected override void OnEnableEvent()
+        private static Material particlesStandardUnlit;
+        private static Material guiText;
+       
+        public static Material ParticlesStandardUnlit
         {
-            Reset();
-            
+            get
+            {
+                if (particlesStandardUnlit == null)
+                {
+                    particlesStandardUnlit = new Material(Shader.Find("Particles/Standard Unlit"));
+                }
+
+                return particlesStandardUnlit;
+            }
+        }
+        
+        public static Material GUIText
+        {
+            get
+            {
+                if (guiText == null)
+                {
+                    guiText = new Material(Shader.Find("GUI/Text Shader"));
+                }
+
+                return guiText;
+            }
+        }
+        
+        static DebugMeshRenderer()
+        {
             SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
             SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
             
@@ -39,39 +54,32 @@ namespace Platinio
             SceneView.duringSceneGui -= DuringSceneGui;
             SceneView.duringSceneGui += DuringSceneGui;
         }
-
-        private void OnDestroy()
-        {
-            RenderPipelineManager.endCameraRendering -= OnBeginCameraRendering;
-            SceneView.duringSceneGui -= DuringSceneGui;
-            SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
-        }
         
-        private void SceneManagerOnsceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
+        private static void SceneManagerOnsceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
         {
             Reset();
         }
 
-        private void Reset()
+        private static void Reset()
         {
             meshDrawCalls.Clear();
         }
 
-        public BaseMeshDrawCall DrawSphere(Vector3 position, float radius)
+        public static BaseMeshDrawCall DrawSphere(Vector3 position, float radius)
         {
-            MeshDrawCall drawCall = new MeshDrawCall(sphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
+            MeshDrawCall drawCall = new MeshDrawCall(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
             AddMeshDrawCall(drawCall);
             return drawCall;
         }
         
-        public BaseMeshDrawCall DrawCylinder(Vector3 position, Quaternion rotation, Vector3 scale)
+        public static BaseMeshDrawCall DrawCylinder(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MeshDrawCall drawCall = new MeshDrawCall(cylinderMesh, position, rotation, scale);
+            MeshDrawCall drawCall = new MeshDrawCall(Config.CylinderMesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
             return drawCall;
         }
 
-        public BaseMeshDrawCall DrawArrow(Vector3 from, Vector3 to, float stemWidth, float arrowHeadSize)
+        public static BaseMeshDrawCall DrawArrow(Vector3 from, Vector3 to, float stemWidth, float arrowHeadSize)
         {
             var compositeMeshDrawCall = new CompositeMeshDrawCall();
             
@@ -79,8 +87,8 @@ namespace Platinio
             Vector3 dir = (to - from).normalized;
             float headLength = arrowHeadSize;
 
-            MeshDrawCall cylinderDrawCall = new MeshDrawCall(cylinderMesh, from + (dir * (d / 2.0f)) - (dir * (headLength / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(stemWidth, (d / 2.0f) - (headLength / 2.0f), stemWidth));
-            MeshDrawCall arrowHeadDrawCall = new MeshDrawCall(arrowHead, to - (dir * headLength), Quaternion.FromToRotation(Vector3.up, dir) * Quaternion.Euler(-90, 0, 0), Vector3.one * arrowHeadSize);
+            MeshDrawCall cylinderDrawCall = new MeshDrawCall(Config.CylinderMesh, from + (dir * (d / 2.0f)) - (dir * (headLength / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(stemWidth, (d / 2.0f) - (headLength / 2.0f), stemWidth));
+            MeshDrawCall arrowHeadDrawCall = new MeshDrawCall(Config.ArrowHead, to - (dir * headLength), Quaternion.FromToRotation(Vector3.up, dir) * Quaternion.Euler(-90, 0, 0), Vector3.one * arrowHeadSize);
             
             compositeMeshDrawCall.AddDrawCall(cylinderDrawCall);
             compositeMeshDrawCall.AddDrawCall(arrowHeadDrawCall);
@@ -89,21 +97,21 @@ namespace Platinio
             return compositeMeshDrawCall;
         }
         
-        public BaseMeshDrawCall RenderLine(Vector3 from, Vector3 to, float lineWidth)
+        public static BaseMeshDrawCall RenderLine(Vector3 from, Vector3 to, float lineWidth)
         {
             float d = Vector3.Distance(from, to);
             Vector3 dir = (to - from).normalized;
 
-            MeshDrawCall drawCall = new MeshDrawCall(cylinderMesh, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
+            MeshDrawCall drawCall = new MeshDrawCall(Config.CylinderMesh, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
             AddMeshDrawCall(drawCall);
 
             return drawCall;
         }
         
-        private void AddMeshDrawCall(BaseMeshDrawCall meshDrawCall)
+        private static void AddMeshDrawCall(BaseMeshDrawCall meshDrawCall)
         {
-            meshDrawCall.SetColor(defaultColor)
-                .SetMaterial(defaultMaterial);
+            meshDrawCall.SetColor(Config.DefaultColor)
+                .SetMaterial(Config.DefaultMaterial);
             
             var cameras = meshDrawCalls.Keys;
 
@@ -113,23 +121,23 @@ namespace Platinio
             }
         }
 
-        public BaseMeshDrawCall DrawCube(Vector3 position, Quaternion rotation, Vector3 scale)
+        public static BaseMeshDrawCall DrawCube(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MeshDrawCall drawCall = new MeshDrawCall(cubeMesh, position, rotation, scale);
+            MeshDrawCall drawCall = new MeshDrawCall(Config.CubeMesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
 
             return drawCall;
         }
         
-        public BaseMeshDrawCall DrawQuad(Vector3 position, Quaternion rotation, Vector3 scale)
+        public static BaseMeshDrawCall DrawQuad(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MeshDrawCall drawCall = new MeshDrawCall(quadMesh, position, rotation, scale);
+            MeshDrawCall drawCall = new MeshDrawCall(Config.QuadMesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
 
             return drawCall;
         }
         
-        public BaseMeshDrawCall DrawMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
+        public static BaseMeshDrawCall DrawMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
         {
             MeshDrawCall drawCall = new MeshDrawCall(mesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
@@ -137,12 +145,12 @@ namespace Platinio
             return drawCall;
         }
 
-        public BaseMeshDrawCall RenderCircle(Vector3 center, int sides, float radius)
+        public static BaseMeshDrawCall RenderCircle(Vector3 center, int sides, float radius)
         {
             return RenderCircle(center, sides, radius, 0.01f, Vector3.up);
         }
 
-        public BaseMeshDrawCall RenderCircle(Vector3 center, int sides, float radius, float lineWidth, Vector3 upwards)
+        public static BaseMeshDrawCall RenderCircle(Vector3 center, int sides, float radius, float lineWidth, Vector3 upwards)
         {
             var compositeMeshDrawCall = new CompositeMeshDrawCall();
             
@@ -181,17 +189,17 @@ namespace Platinio
             return compositeMeshDrawCall;
         }
 
-        private void DuringSceneGui(SceneView sceneView)
+        private static void DuringSceneGui(SceneView sceneView)
         {
             HandleCameraDrawCalls(sceneView.camera, 1 / 30.0f);
         }
 
-        private void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        private static void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
             HandleCameraDrawCalls(camera, Time.deltaTime);
         }
 
-        public void HandleCameraDrawCalls(Camera camera, float deltaTime)
+        public static void HandleCameraDrawCalls(Camera camera, float deltaTime)
         {
             //if the camera doesnt exist add it
             if (!meshDrawCalls.TryGetValue(camera, out var drawCalls))

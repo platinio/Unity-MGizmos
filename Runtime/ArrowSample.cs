@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using ArcaneOnyx;
+using UnityEngine;
 
 namespace Platinio
 {
@@ -12,7 +13,7 @@ namespace Platinio
         private void OnDrawGizmos()
         {
             if (from == null || to == null) return;
-            DebugMeshRenderer.Instance.DrawArrow(from.position, to.position, 0.05f, arrowHeadSize)
+            DebugMeshRenderer.DrawArrow(from.position, to.position, 0.05f, arrowHeadSize)
                 .SetMaterial(material);
         }
     }

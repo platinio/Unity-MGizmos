@@ -1,7 +1,7 @@
 ﻿using ArcaneOnyx;
 using UnityEngine;
 
-namespace Platinio
+namespace ArcaneOnyx
 {
     public class ArrowSample : MonoBehaviour
     {

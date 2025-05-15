@@ -8,8 +8,8 @@ namespace ArcaneOnyx
 {
     public static class MGizmos
     {
-        public static DebugMeshRendererConfig Config => DebugMeshRendererConfig.Instance;
-        private static Dictionary<Camera, List<BaseMeshDrawCall>> meshDrawCalls = new();
+        public static MGizmosRendererConfig Config => MGizmosRendererConfig.Instance;
+        private static Dictionary<Camera, List<MGizmoBaseDrawCall>> meshDrawCalls = new();
         
         static MGizmos()
         {
@@ -47,16 +47,16 @@ namespace ArcaneOnyx
             meshDrawCalls.Clear();
         }
         
-        private static void AddMeshDrawCall(BaseMeshDrawCall meshDrawCall)
+        private static void AddMeshDrawCall(MGizmoBaseDrawCall drawCall)
         {
-            meshDrawCall.SetColor(Config.DefaultColor)
+            drawCall.SetColor(Config.DefaultColor)
                 .SetMaterial(Config.DefaultMaterial);
             
             var cameras = meshDrawCalls.Keys;
 
             foreach (var camera in cameras)
             {
-                meshDrawCalls[camera].Add(meshDrawCall);
+                meshDrawCalls[camera].Add(drawCall);
             }
         }
         
@@ -75,7 +75,7 @@ namespace ArcaneOnyx
             //if the camera doesnt exist add it
             if (!meshDrawCalls.TryGetValue(camera, out var drawCalls))
             {
-                meshDrawCalls.Add(camera, new List<BaseMeshDrawCall>());
+                meshDrawCalls.Add(camera, new List<MGizmoBaseDrawCall>());
                 return;
             }
             
@@ -91,76 +91,76 @@ namespace ArcaneOnyx
         }
 
         #region Render
-        public static BaseMeshDrawCall RenderSphere(Vector3 position, float radius)
+        public static MGizmoBaseDrawCall RenderSphere(Vector3 position, float radius)
         {
-            MeshDrawCall drawCall = new MeshDrawCall(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
+            MGizmoDrawCall drawCall = new MGizmoDrawCall(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
             AddMeshDrawCall(drawCall);
             return drawCall;
         }
 
-        public static BaseMeshDrawCall RenderCylinder(Vector3 position) => RenderCylinder(position, Quaternion.identity, Vector3.one);
+        public static MGizmoBaseDrawCall RenderCylinder(Vector3 position) => RenderCylinder(position, Quaternion.identity, Vector3.one);
         
-        public static BaseMeshDrawCall RenderCylinder(Vector3 position, Quaternion rotation) => RenderCylinder(position, rotation, Vector3.one);
+        public static MGizmoBaseDrawCall RenderCylinder(Vector3 position, Quaternion rotation) => RenderCylinder(position, rotation, Vector3.one);
         
-        public static BaseMeshDrawCall RenderCylinder(Vector3 position, Vector3 scale) => RenderCylinder(position, Quaternion.identity, scale);
+        public static MGizmoBaseDrawCall RenderCylinder(Vector3 position, Vector3 scale) => RenderCylinder(position, Quaternion.identity, scale);
         
-        public static BaseMeshDrawCall RenderCylinder(Vector3 position, Quaternion rotation, Vector3 scale)
+        public static MGizmoBaseDrawCall RenderCylinder(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MeshDrawCall drawCall = new MeshDrawCall(Config.CylinderMesh, position, rotation, scale);
+            MGizmoDrawCall drawCall = new MGizmoDrawCall(Config.CylinderMesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
             return drawCall;
         }
 
-        public static BaseMeshDrawCall RenderLine(Vector3 from, Vector3 to) => RenderLine(from, to, 0.01f);
+        public static MGizmoBaseDrawCall RenderLine(Vector3 from, Vector3 to) => RenderLine(from, to, 0.01f);
 
-        public static BaseMeshDrawCall RenderLine(Vector3 from, Vector3 to, float lineWidth)
+        public static MGizmoBaseDrawCall RenderLine(Vector3 from, Vector3 to, float lineWidth)
         {
             float d = Vector3.Distance(from, to);
             Vector3 dir = (to - from).normalized;
 
-            MeshDrawCall drawCall = new MeshDrawCall(Config.CylinderMesh, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
+            MGizmoDrawCall drawCall = new MGizmoDrawCall(Config.CylinderMesh, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
             AddMeshDrawCall(drawCall);
 
             return drawCall;
         }
 
-        public static BaseMeshDrawCall RenderCube(Vector3 position) => RenderCube(position, Quaternion.identity, Vector3.one);
+        public static MGizmoBaseDrawCall RenderCube(Vector3 position) => RenderCube(position, Quaternion.identity, Vector3.one);
         
-        public static BaseMeshDrawCall RenderCube(Vector3 position, Quaternion rotation) => RenderCube(position, rotation, Vector3.one);
+        public static MGizmoBaseDrawCall RenderCube(Vector3 position, Quaternion rotation) => RenderCube(position, rotation, Vector3.one);
 
-        public static BaseMeshDrawCall RenderCube(Vector3 position, Vector3 scale) => RenderCube(position, Quaternion.identity, scale);
+        public static MGizmoBaseDrawCall RenderCube(Vector3 position, Vector3 scale) => RenderCube(position, Quaternion.identity, scale);
         
-        public static BaseMeshDrawCall RenderCube(Vector3 position, Quaternion rotation, Vector3 scale)
+        public static MGizmoBaseDrawCall RenderCube(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MeshDrawCall drawCall = new MeshDrawCall(Config.CubeMesh, position, rotation, scale);
+            MGizmoDrawCall drawCall = new MGizmoDrawCall(Config.CubeMesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
 
             return drawCall;
         }
 
-        public static BaseMeshDrawCall RenderQuad(Vector3 position) => RenderQuad(position, Quaternion.identity, Vector3.one);
+        public static MGizmoBaseDrawCall RenderQuad(Vector3 position) => RenderQuad(position, Quaternion.identity, Vector3.one);
         
-        public static BaseMeshDrawCall RenderQuad(Vector3 position, Quaternion rotation) => RenderQuad(position, rotation, Vector3.one);
+        public static MGizmoBaseDrawCall RenderQuad(Vector3 position, Quaternion rotation) => RenderQuad(position, rotation, Vector3.one);
         
-        public static BaseMeshDrawCall RenderQuad(Vector3 position, Vector3 scale) => RenderQuad(position, Quaternion.identity, scale);
+        public static MGizmoBaseDrawCall RenderQuad(Vector3 position, Vector3 scale) => RenderQuad(position, Quaternion.identity, scale);
         
-        public static BaseMeshDrawCall RenderQuad(Vector3 position, Quaternion rotation, Vector3 scale)
+        public static MGizmoBaseDrawCall RenderQuad(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MeshDrawCall drawCall = new MeshDrawCall(Config.QuadMesh, position, rotation, scale);
+            MGizmoDrawCall drawCall = new MGizmoDrawCall(Config.QuadMesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
 
             return drawCall;
         }
         
-        public static BaseMeshDrawCall RenderCircle(Vector3 center, int sides, float radius) => RenderCircle(center, sides, radius, 0.01f, Vector3.up);
+        public static MGizmoBaseDrawCall RenderCircle(Vector3 center, int sides, float radius) => RenderCircle(center, sides, radius, 0.01f, Vector3.up);
         
-        public static BaseMeshDrawCall RenderCircle(Vector3 center, int sides, float radius, Vector3 upwards) => RenderCircle(center, sides, radius, 0.01f, upwards);
+        public static MGizmoBaseDrawCall RenderCircle(Vector3 center, int sides, float radius, Vector3 upwards) => RenderCircle(center, sides, radius, 0.01f, upwards);
 
-        public static BaseMeshDrawCall RenderCircle(Vector3 center, int sides, float radius, float lineWidth) => RenderCircle(center, sides, radius, lineWidth, Vector3.up);
+        public static MGizmoBaseDrawCall RenderCircle(Vector3 center, int sides, float radius, float lineWidth) => RenderCircle(center, sides, radius, lineWidth, Vector3.up);
 
-        public static BaseMeshDrawCall RenderCircle(Vector3 center, int sides, float radius, float lineWidth, Vector3 upwards)
+        public static MGizmoBaseDrawCall RenderCircle(Vector3 center, int sides, float radius, float lineWidth, Vector3 upwards)
         {
-            var compositeMeshDrawCall = new CompositeMeshDrawCall();
+            var compositeMeshDrawCall = new MGizmoCompositeDrawCall();
             
             Vector3[] positions = new Vector3[sides];
             Vector3 right = Quaternion.Euler(0, 0, 90) * upwards;
@@ -197,23 +197,23 @@ namespace ArcaneOnyx
             return compositeMeshDrawCall;
         }
 
-        public static BaseMeshDrawCall RenderMesh(Mesh mesh, Vector3 position) => RenderMesh(mesh, position, Quaternion.identity, Vector3.one);
+        public static MGizmoBaseDrawCall RenderMesh(Mesh mesh, Vector3 position) => RenderMesh(mesh, position, Quaternion.identity, Vector3.one);
         
-        public static BaseMeshDrawCall RenderMesh(Mesh mesh, Vector3 position, Quaternion rotation) => RenderMesh(mesh, position, rotation, Vector3.one);
+        public static MGizmoBaseDrawCall RenderMesh(Mesh mesh, Vector3 position, Quaternion rotation) => RenderMesh(mesh, position, rotation, Vector3.one);
         
-        public static BaseMeshDrawCall RenderMesh(Mesh mesh, Vector3 position, Vector3 scale) => RenderMesh(mesh, position, Quaternion.identity, scale);
+        public static MGizmoBaseDrawCall RenderMesh(Mesh mesh, Vector3 position, Vector3 scale) => RenderMesh(mesh, position, Quaternion.identity, scale);
 
-        public static BaseMeshDrawCall RenderMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
+        public static MGizmoBaseDrawCall RenderMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MeshDrawCall drawCall = new MeshDrawCall(mesh, position, rotation, scale);
+            MGizmoDrawCall drawCall = new MGizmoDrawCall(mesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
 
             return drawCall;
         }
         
-        public static BaseMeshDrawCall RenderArrow(Vector3 from, Vector3 to, float stemWidth = 0.01f, float arrowHeadSize = 0.5f)
+        public static MGizmoBaseDrawCall RenderArrow(Vector3 from, Vector3 to, float stemWidth = 0.01f, float arrowHeadSize = 0.5f)
         {
-            var compositeMeshDrawCall = new CompositeMeshDrawCall();
+            var compositeMeshDrawCall = new MGizmoCompositeDrawCall();
             
             float d = Vector3.Distance(from, to);
             Vector3 dir = (to - from).normalized;
@@ -223,12 +223,12 @@ namespace ArcaneOnyx
             Vector3 arrowHeadOffset = (dir * (headLength / 2.0f));
             Vector3 stemScale = new Vector3(stemWidth, (d / 2.0f) - (headLength / 2.0f), stemWidth);
             
-            MeshDrawCall cylinderDrawCall = new MeshDrawCall(Config.CylinderMesh,  stemStartPosition - arrowHeadOffset, Quaternion.FromToRotation(Vector3.up, dir), stemScale);
+            MGizmoDrawCall cylinderDrawCall = new MGizmoDrawCall(Config.CylinderMesh,  stemStartPosition - arrowHeadOffset, Quaternion.FromToRotation(Vector3.up, dir), stemScale);
 
             Quaternion arrowHeadRotation = Quaternion.FromToRotation(Vector3.up, dir) * Quaternion.Euler(-90, 0, 0);
             Vector3 arrowHeadScale = Vector3.one * arrowHeadSize;
             
-            MeshDrawCall arrowHeadDrawCall = new MeshDrawCall(Config.ArrowHead, to - (dir * headLength), arrowHeadRotation, arrowHeadScale);
+            MGizmoDrawCall arrowHeadDrawCall = new MGizmoDrawCall(Config.ArrowHead, to - (dir * headLength), arrowHeadRotation, arrowHeadScale);
             
             compositeMeshDrawCall.AddDrawCall(cylinderDrawCall);
             compositeMeshDrawCall.AddDrawCall(arrowHeadDrawCall);

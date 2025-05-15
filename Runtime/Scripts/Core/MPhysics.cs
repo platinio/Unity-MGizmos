@@ -27,7 +27,7 @@ namespace ArcaneOnyx
         private static Color ContactPointColor = new(1, 52.0f / 255, 0, 177.0f / 255);
         private static Color VelocityColor = new(9.0f / 255, 180.0f / 255, 0, 177.0f / 255);
 
-        public static float GizmoDuration = 0;
+        public static float Duration = 0;
         
         #region Materials
         private static Material particlesStandardUnlit;
@@ -64,11 +64,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             int size = Physics.RaycastNonAlloc(ray, results);
-            DrawRay(ray).SetDuration(GizmoDuration);
+            DrawRay(ray).SetDuration(Duration);
            
             for (int i = 0; i < size; i++)
             {
-                DrawRaycastHit(results[i]).SetDuration(GizmoDuration);
+                DrawRaycastHit(results[i]).SetDuration(Duration);
             }
             
             return size;
@@ -81,11 +81,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             int size = Physics.RaycastNonAlloc(ray, results, maxDistance);
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
 
             for (int i = 0; i < size; i++)
             {
-                DrawRaycastHit(results[i]).SetDuration(GizmoDuration);
+                DrawRaycastHit(results[i]).SetDuration(Duration);
             }
             
             return size;
@@ -98,11 +98,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             int size = Physics.RaycastNonAlloc(ray, results, maxDistance, layerMask);
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
 
             for (int i = 0; i < size; i++)
             {
-                DrawRaycastHit(results[i]).SetDuration(GizmoDuration);
+                DrawRaycastHit(results[i]).SetDuration(Duration);
             }
             
             return size;
@@ -115,11 +115,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             int size = Physics.RaycastNonAlloc(ray, results, maxDistance, layerMask, queryTriggerInteraction);
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
 
             for (int i = 0; i < size; i++)
             {
-                DrawRaycastHit(results[i]).SetDuration(GizmoDuration);
+                DrawRaycastHit(results[i]).SetDuration(Duration);
             }
             
             return size;
@@ -132,11 +132,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             int size = Physics.RaycastNonAlloc(origin, direction, results);
-            DrawRay(origin, direction).SetDuration(GizmoDuration);
+            DrawRay(origin, direction).SetDuration(Duration);
 
             for (int i = 0; i < size; i++)
             {
-                DrawRaycastHit(results[i]).SetDuration(GizmoDuration);
+                DrawRaycastHit(results[i]).SetDuration(Duration);
             }
             
             return size;
@@ -149,11 +149,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             int size = Physics.RaycastNonAlloc(origin, direction, results, maxDistance);
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
 
             for (int i = 0; i < size; i++)
             {
-                DrawRaycastHit(results[i]).SetDuration(GizmoDuration);
+                DrawRaycastHit(results[i]).SetDuration(Duration);
             }
             
             return size;
@@ -166,11 +166,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             int size = Physics.RaycastNonAlloc(origin, direction, results, maxDistance, layerMask);
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
 
             for (int i = 0; i < size; i++)
             {
-                DrawRaycastHit(results[i]).SetDuration(GizmoDuration);
+                DrawRaycastHit(results[i]).SetDuration(Duration);
             }
             
             return size;
@@ -183,11 +183,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             int size = Physics.RaycastNonAlloc(origin, direction, results, maxDistance, layerMask, queryTriggerInteraction);
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
 
             for (int i = 0; i < size; i++)
             {
-                DrawRaycastHit(results[i]).SetDuration(GizmoDuration);
+                DrawRaycastHit(results[i]).SetDuration(Duration);
             }
             
             return size;
@@ -200,11 +200,11 @@ namespace ArcaneOnyx
         {
             var raycastHits = Physics.RaycastAll(ray);
 #if UNITY_EDITOR
-            DrawRay(ray).SetDuration(GizmoDuration);
+            DrawRay(ray).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
 #endif
             return raycastHits;
@@ -214,11 +214,11 @@ namespace ArcaneOnyx
         {
             var raycastHits = Physics.RaycastAll(ray, maxDistance);
 #if UNITY_EDITOR
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
 #endif
             return raycastHits;
@@ -228,11 +228,11 @@ namespace ArcaneOnyx
         {
             var raycastHits = Physics.RaycastAll(ray, maxDistance, layerMask);
 #if UNITY_EDITOR
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
 #endif
             return raycastHits;
@@ -242,11 +242,11 @@ namespace ArcaneOnyx
         {
             var raycastHits = Physics.RaycastAll(ray, maxDistance, layerMask, queryTriggerInteraction);
 #if UNITY_EDITOR
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
 #endif
             return raycastHits;
@@ -257,11 +257,11 @@ namespace ArcaneOnyx
         {
             var raycastHits = Physics.RaycastAll(origin, direction);
 #if UNITY_EDITOR
-            DrawRay(origin, direction).SetDuration(GizmoDuration);
+            DrawRay(origin, direction).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
 #endif
             return raycastHits;
@@ -271,11 +271,11 @@ namespace ArcaneOnyx
         {
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance);
 #if UNITY_EDITOR
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
 #endif
             return raycastHits;
@@ -285,11 +285,11 @@ namespace ArcaneOnyx
         {
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance, layerMask);
 #if UNITY_EDITOR
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
 #endif
             return raycastHits;
@@ -299,11 +299,11 @@ namespace ArcaneOnyx
         {
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance, layerMask, queryTriggerInteraction);
 #if UNITY_EDITOR
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
 #endif
             return raycastHits;
@@ -313,11 +313,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var raycastHits = Physics.RaycastAll(ray);
-            DrawRay(ray).SetDuration(GizmoDuration);
+            DrawRay(ray).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
             
             return raycastHits != null && raycastHits.Length > 0;
@@ -330,11 +330,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var raycastHits = Physics.RaycastAll(ray, maxDistance);
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-               DrawRaycastHit(hit).SetDuration(GizmoDuration);
+               DrawRaycastHit(hit).SetDuration(Duration);
             }
             
             return raycastHits != null && raycastHits.Length > 0;
@@ -347,11 +347,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var raycastHits = Physics.RaycastAll(ray, maxDistance, layerMask);
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
             
             return raycastHits != null && raycastHits.Length > 0;
@@ -364,11 +364,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var raycastHits = Physics.RaycastAll(ray, maxDistance, layerMask, queryTriggerInteraction);
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
             
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
             
             return raycastHits != null && raycastHits.Length > 0;
@@ -381,8 +381,8 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var result = Physics.Raycast(ray, out hitInfo);
-            DrawRay(ray).SetDuration(GizmoDuration);
-            DrawRaycastHit(hitInfo).SetDuration(GizmoDuration);
+            DrawRay(ray).SetDuration(Duration);
+            DrawRaycastHit(hitInfo).SetDuration(Duration);
             
             return result;
 #else
@@ -394,8 +394,8 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var result = Physics.Raycast(ray, out hitInfo, maxDistance);
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
-            DrawRaycastHit(hitInfo).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
+            DrawRaycastHit(hitInfo).SetDuration(Duration);
             
             return result;
 #else
@@ -407,8 +407,8 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var result = Physics.Raycast(ray, out hitInfo, maxDistance, layerMask);
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
-            DrawRaycastHit(hitInfo).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
+            DrawRaycastHit(hitInfo).SetDuration(Duration);
             
             return result;
 #else
@@ -420,8 +420,8 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var result = Physics.Raycast(ray, out hitInfo, maxDistance, layerMask, queryTriggerInteraction);
-            DrawRay(ray, maxDistance).SetDuration(GizmoDuration);
-            DrawRaycastHit(hitInfo).SetDuration(GizmoDuration);
+            DrawRay(ray, maxDistance).SetDuration(Duration);
+            DrawRaycastHit(hitInfo).SetDuration(Duration);
             
             return result;
 #else
@@ -433,11 +433,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var raycastHits = Physics.RaycastAll(origin, direction);
-            DrawRay(origin, direction).SetDuration(GizmoDuration);
+            DrawRay(origin, direction).SetDuration(Duration);
 
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
             
             return raycastHits != null && raycastHits.Length > 0;
@@ -450,11 +450,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance);
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
 
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
             
             return raycastHits != null && raycastHits.Length > 0;
@@ -467,11 +467,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance, layerMask);
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
 
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
             
             return raycastHits != null && raycastHits.Length > 0;
@@ -484,11 +484,11 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance, layerMask, queryTriggerInteraction);
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
 
             foreach (var hit in raycastHits)
             {
-                DrawRaycastHit(hit).SetDuration(GizmoDuration);
+                DrawRaycastHit(hit).SetDuration(Duration);
             }
             
             return raycastHits != null && raycastHits.Length > 0;
@@ -501,8 +501,8 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var result = Physics.Raycast(origin, direction, out raycastHitInfo);
-            DrawRay(origin, direction).SetDuration(GizmoDuration);
-            DrawRaycastHit(raycastHitInfo).SetDuration(GizmoDuration);
+            DrawRay(origin, direction).SetDuration(Duration);
+            DrawRaycastHit(raycastHitInfo).SetDuration(Duration);
             
             return result;
 #else
@@ -514,8 +514,8 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var result = Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance);
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
-            DrawRaycastHit(raycastHitInfo).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
+            DrawRaycastHit(raycastHitInfo).SetDuration(Duration);
             
             return result;
 #else
@@ -527,8 +527,8 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var result = Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance, layerMask);
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
-            DrawRaycastHit(raycastHitInfo).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
+            DrawRaycastHit(raycastHitInfo).SetDuration(Duration);
             
             return result;
 #else
@@ -540,8 +540,8 @@ namespace ArcaneOnyx
         {
 #if UNITY_EDITOR
             var result = Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance, layerMask, queryTriggerInteraction);
-            DrawRay(origin, direction, maxDistance).SetDuration(GizmoDuration);
-            DrawRaycastHit(raycastHitInfo).SetDuration(GizmoDuration);
+            DrawRay(origin, direction, maxDistance).SetDuration(Duration);
+            DrawRaycastHit(raycastHitInfo).SetDuration(Duration);
             
             return result;
 #else
@@ -549,7 +549,7 @@ namespace ArcaneOnyx
 #endif
         }
 
-        public static BaseMeshDrawCall DebugRigidBody(Rigidbody rb, float velocityScaler)
+        public static MGizmoBaseDrawCall DebugRigidBody(Rigidbody rb, float velocityScaler)
         {
             var mat = GUITextMaterial;
             var dc = MGizmos.RenderArrow(rb.position, rb.position + (rb.velocity.normalized * rb.velocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize);
@@ -559,55 +559,55 @@ namespace ArcaneOnyx
             return dc;
         }
 
-        public static BaseMeshDrawCall DrawCollision(Collision c)
+        public static MGizmoBaseDrawCall DrawCollision(Collision c)
         {
             return DrawContactPoints(c.contacts);
         }
 
-        public static CompositeMeshDrawCall DrawContactPoints(ContactPoint[] contactPoints)
+        public static MGizmoCompositeDrawCall DrawContactPoints(ContactPoint[] contactPoints)
         {
-            CompositeMeshDrawCall compositeMeshDrawCall = new();
+            MGizmoCompositeDrawCall compositeDrawCall = new();
             
             foreach (var contactPoint in contactPoints)
             {
                 var dc = DrawContactPoint(contactPoint);
-                compositeMeshDrawCall.AddDrawCall(dc);
+                compositeDrawCall.AddDrawCall(dc);
             }
 
-            return compositeMeshDrawCall;
+            return compositeDrawCall;
         }
 
-        public static BaseMeshDrawCall DrawContactPoint(ContactPoint p)
+        public static MGizmoBaseDrawCall DrawContactPoint(ContactPoint p)
         {
-            CompositeMeshDrawCall compositeMeshDrawCall = new();
+            MGizmoCompositeDrawCall compositeDrawCall = new();
             
             var contactPointMaterial = MGizmos.Config.DefaultMaterial;
             var dc = MGizmos.RenderSphere(p.point, ContantPointSize);
             dc.SetMaterial(contactPointMaterial);
             dc.SetColor(ContactPointColor);
-            compositeMeshDrawCall.AddDrawCall(dc);
+            compositeDrawCall.AddDrawCall(dc);
             
             var normalMaterial = ParticlesStandardUnlitMaterial;
             Vector3 impulseEnd = p.point + (p.impulse.normalized * (p.impulse.magnitude * Time.fixedDeltaTime) * CollisionImpulseMultiplier);
             dc = MGizmos.RenderArrow(p.point, impulseEnd, NormalStemWidth, NormalArrowHeadSize);
             dc.SetMaterial(normalMaterial);
             dc.SetColor(NormalColor);
-            compositeMeshDrawCall.AddDrawCall(dc);
+            compositeDrawCall.AddDrawCall(dc);
 
-            return compositeMeshDrawCall;
+            return compositeDrawCall;
         }
 
-        public static BaseMeshDrawCall DrawRay(Vector3 origin, Vector3 direction, float maxDistance)
+        public static MGizmoBaseDrawCall DrawRay(Vector3 origin, Vector3 direction, float maxDistance)
         {
             return DrawRay(new Ray(origin, direction), maxDistance);
         }
         
-        public static BaseMeshDrawCall DrawRay(Vector3 origin, Vector3 direction)
+        public static MGizmoBaseDrawCall DrawRay(Vector3 origin, Vector3 direction)
         {
             return DrawRay(new Ray(origin, direction));
         }
 
-        public static BaseMeshDrawCall DrawRay(Ray ray, float maxDistance = FakeInfinity)
+        public static MGizmoBaseDrawCall DrawRay(Ray ray, float maxDistance = FakeInfinity)
         {
             Vector3 rayEndPosition = ray.origin + (ray.direction * maxDistance);
             
@@ -618,9 +618,9 @@ namespace ArcaneOnyx
             return dc;
         }
 
-        public static BaseMeshDrawCall DrawRaycastHit(RaycastHit hit)
+        public static MGizmoBaseDrawCall DrawRaycastHit(RaycastHit hit)
         {
-            CompositeMeshDrawCall compositeMeshDrawCall = new();
+            MGizmoCompositeDrawCall compositeDrawCall = new();
             
             var hitMaterial = ParticlesStandardUnlitMaterial;
             var normalMaterial = ParticlesStandardUnlitMaterial;
@@ -629,14 +629,14 @@ namespace ArcaneOnyx
             var dc = MGizmos.RenderSphere(hit.point, RaycastHitSize);
             dc.SetMaterial(hitMaterial);
             dc.SetColor(HitColor);
-            compositeMeshDrawCall.AddDrawCall(dc);
+            compositeDrawCall.AddDrawCall(dc);
             
             dc = MGizmos.RenderArrow(hit.point, normalEnd, NormalStemWidth, NormalArrowHeadSize);
             dc.SetMaterial(normalMaterial);
             dc.SetColor(NormalColor);
-            compositeMeshDrawCall.AddDrawCall(dc);
+            compositeDrawCall.AddDrawCall(dc);
 
-            return compositeMeshDrawCall;
+            return compositeDrawCall;
         }
     }
 }

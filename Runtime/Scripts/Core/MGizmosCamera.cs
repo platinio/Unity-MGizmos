@@ -1,9 +1,9 @@
 using ArcaneOnyx;
 using UnityEngine;
 
-namespace Platinio
+namespace ArcaneOnyx
 {
-    public class CameraDebugRender : MonoBehaviour
+    public class MGizmosCamera : MonoBehaviour
     {
         private Camera renderCamera;
 

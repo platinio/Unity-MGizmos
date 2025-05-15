@@ -1,10 +1,8 @@
-﻿using System;
-using Platinio;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace ArcaneOnyx
 {
-    public class DebugRigidBody : MonoBehaviour
+    public class RigidBodyGizmo : MonoBehaviour
     {
         [SerializeField] private float velocityScaler;
 
@@ -17,7 +15,11 @@ namespace ArcaneOnyx
 
         private void Update()
         {
+            float v = MPhysics.Duration;
+            
+            MPhysics.Duration = 0;
             MPhysics.DebugRigidBody(rb, velocityScaler);
+            MPhysics.Duration = v;
         }
     }
 }

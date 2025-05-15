@@ -1,11 +1,8 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace ArcaneOnyx
 {
-    public class DebugRaycast : MonoBehaviour
+    public class RaycastExample : MonoBehaviour
     {
         [SerializeField] private Transform fromRaycast;
         [SerializeField] private Transform toRaycast;

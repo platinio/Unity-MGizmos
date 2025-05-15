@@ -2,7 +2,7 @@
 
 namespace ArcaneOnyx
 {
-    public class DebugMovement : MonoBehaviour
+    public class MovementGizmo : MonoBehaviour
     {
         [SerializeField] private Mesh mesh;
         [SerializeField] private Material material;
@@ -21,7 +21,6 @@ namespace ArcaneOnyx
             MGizmos.RenderMesh(mesh, transform.position, transform.rotation, scale)
                 .SetDuration(duration)
                 .SetMaterial(material);
-
         }
     }
 }

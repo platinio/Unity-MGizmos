@@ -1,10 +1,10 @@
-﻿using Platinio;
+﻿using ArcaneOnyx;
 using UnityEngine;
 
 namespace ArcaneOnyx
 {
     [CreateAssetMenu(menuName = "Debug Mesh Renderer Config")]
-    public class DebugMeshRendererConfig : ScriptableSingleton<DebugMeshRendererConfig>
+    public class MGizmosRendererConfig : ScriptableSingleton<MGizmosRendererConfig>
     {
         [Header("Config")]
         [SerializeField] private Material defaultMaterial;

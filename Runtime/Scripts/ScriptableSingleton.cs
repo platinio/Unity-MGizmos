@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace Platinio
+namespace ArcaneOnyx
 {
     public class ScriptableSingleton<T> : ScriptableObject where T : ScriptableSingleton<T>
     {

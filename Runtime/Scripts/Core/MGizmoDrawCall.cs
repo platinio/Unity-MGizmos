@@ -3,7 +3,7 @@ using UnityEngine.Rendering;
 
 namespace ArcaneOnyx
 {
-    public class MeshDrawCall : BaseMeshDrawCall
+    public class MGizmoDrawCall : MGizmoBaseDrawCall
     {
         protected Vector3 position;
         protected Vector3 scale;
@@ -24,11 +24,11 @@ namespace ArcaneOnyx
         
         private float timer;
         
-        public MeshDrawCall()
+        public MGizmoDrawCall()
         {
         }
 
-        public MeshDrawCall(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
+        public MGizmoDrawCall(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
         {
             this.mesh = mesh;
             this.position = position;
@@ -39,31 +39,31 @@ namespace ArcaneOnyx
             materialPropertyBlock = new MaterialPropertyBlock();
         }
 
-        public override BaseMeshDrawCall SetMaterial(Material material)
+        public override MGizmoBaseDrawCall SetMaterial(Material material)
         {
             this.material = material;
             return this;
         }
 
-        public override BaseMeshDrawCall SetColor(Color color)
+        public override MGizmoBaseDrawCall SetColor(Color color)
         {
             materialPropertyBlock.SetColor(ColorPropertyId, color);
             return this;
         }
 
-        public override BaseMeshDrawCall SetDuration(float duration)
+        public override MGizmoBaseDrawCall SetDuration(float duration)
         {
             this.duration = duration;
             return this;
         }
 
-        public override BaseMeshDrawCall SetShadowCastingMode(ShadowCastingMode shadowCastingMode)
+        public override MGizmoBaseDrawCall SetShadowCastingMode(ShadowCastingMode shadowCastingMode)
         {
             this.shadowCastingMode = shadowCastingMode;
             return this;
         }
 
-        public override BaseMeshDrawCall SetReceiveShadows(bool value)
+        public override MGizmoBaseDrawCall SetReceiveShadows(bool value)
         {
             receiveShadows = value;
             return this;

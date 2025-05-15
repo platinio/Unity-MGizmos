@@ -4,9 +4,9 @@ using UnityEngine.Rendering;
 
 namespace ArcaneOnyx
 {
-    public class CompositeMeshDrawCall : BaseMeshDrawCall
+    public class MGizmoCompositeDrawCall : MGizmoBaseDrawCall
     {
-        private List<BaseMeshDrawCall> drawCalls = new();
+        private List<MGizmoBaseDrawCall> drawCalls = new();
 
         public override float RemainingTime 
         {
@@ -25,12 +25,12 @@ namespace ArcaneOnyx
 
         public override MaterialPropertyBlock MaterialPropertyBlock { get; }
 
-        public void AddDrawCall(BaseMeshDrawCall drawCall)
+        public void AddDrawCall(MGizmoBaseDrawCall drawCall)
         {
             drawCalls.Add(drawCall);
         }
 
-        public override BaseMeshDrawCall SetColor(Color color)
+        public override MGizmoBaseDrawCall SetColor(Color color)
         {
             foreach (var dc in drawCalls)
             {
@@ -40,7 +40,7 @@ namespace ArcaneOnyx
             return this;
         }
 
-        public override BaseMeshDrawCall SetDuration(float duration)
+        public override MGizmoBaseDrawCall SetDuration(float duration)
         {
             foreach (var dc in drawCalls)
             {
@@ -50,7 +50,7 @@ namespace ArcaneOnyx
             return this;
         }
 
-        public override BaseMeshDrawCall SetShadowCastingMode(ShadowCastingMode shadowCastingMode)
+        public override MGizmoBaseDrawCall SetShadowCastingMode(ShadowCastingMode shadowCastingMode)
         {
             foreach (var dc in drawCalls)
             {
@@ -60,7 +60,7 @@ namespace ArcaneOnyx
             return this;
         }
 
-        public override BaseMeshDrawCall SetReceiveShadows(bool value)
+        public override MGizmoBaseDrawCall SetReceiveShadows(bool value)
         {
             foreach (var dc in drawCalls)
             {
@@ -70,7 +70,7 @@ namespace ArcaneOnyx
             return this;
         }
 
-        public override BaseMeshDrawCall SetMaterial(Material material)
+        public override MGizmoBaseDrawCall SetMaterial(Material material)
         {
             foreach (var dc in drawCalls)
             {

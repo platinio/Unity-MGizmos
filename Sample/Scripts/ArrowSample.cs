@@ -13,8 +13,9 @@ namespace ArcaneOnyx
         private void OnDrawGizmos()
         {
             if (from == null || to == null) return;
-            MGizmos.RenderArrow(from.position, to.position, 0.05f, arrowHeadSize)
-                .SetMaterial(material);
+            
+            var dc = MGizmos.RenderArrow(from.position, to.position, 0.05f, arrowHeadSize);
+            if (material != null) dc.SetMaterial(material);
         }
     }
 }

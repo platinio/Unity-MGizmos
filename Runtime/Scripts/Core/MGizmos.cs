@@ -17,8 +17,8 @@ namespace ArcaneOnyx
             SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
             
             //listen this for scriptable base pipelines
-            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
-            RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+            //RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+            //RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
             
             //listen this for scene view render
             SceneView.duringSceneGui -= DuringSceneGui;
@@ -56,7 +56,7 @@ namespace ArcaneOnyx
 
             foreach (var camera in cameras)
             {
-                meshDrawCalls[camera].Add(drawCall);
+                meshDrawCalls[camera].Add(drawCall.Clone());
             }
         }
         
@@ -67,7 +67,7 @@ namespace ArcaneOnyx
 
         private static void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
         {
-            HandleCameraDrawCalls(camera, Time.deltaTime);
+            //HandleCameraDrawCalls(camera, Time.deltaTime);
         }
 
         public static void HandleCameraDrawCalls(Camera camera, float deltaTime)
@@ -83,11 +83,17 @@ namespace ArcaneOnyx
             {
                 drawCalls[i].Draw(camera, deltaTime);
                 
-                if (drawCalls[i].RemainingTime < 0)
+                if (drawCalls[i].RemainingTime <= 0)
                 {
                     drawCalls.RemoveAt(i);
                 }
             }
+        }
+
+        public static void RemoveRenderCamera(Camera camera)
+        {
+            if (camera == null) return;
+            meshDrawCalls.Remove(camera);
         }
 
         #region Render

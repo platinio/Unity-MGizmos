@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -7,12 +8,12 @@ namespace ArcaneOnyx
     public class MGizmoCompositeDrawCall : MGizmoBaseDrawCall
     {
         private List<MGizmoBaseDrawCall> drawCalls = new();
-
+        
         public override float RemainingTime 
         {
             get
             {
-                float duration = 0;
+                float duration = float.MinValue;
 
                 foreach (var dc in drawCalls)
                 {
@@ -24,6 +25,13 @@ namespace ArcaneOnyx
         }
 
         public override MaterialPropertyBlock MaterialPropertyBlock { get; }
+
+        public MGizmoCompositeDrawCall() { }
+
+        public MGizmoCompositeDrawCall(List<MGizmoBaseDrawCall> dc)
+        {
+            drawCalls = dc;
+        }
 
         public void AddDrawCall(MGizmoBaseDrawCall drawCall)
         {
@@ -86,11 +94,16 @@ namespace ArcaneOnyx
             {
                 drawCalls[i].Draw(camera, deltaTime);
                 
-                if (drawCalls[i].RemainingTime <= 0)
+                if (drawCalls[i].RemainingTime < 0)
                 {
                     drawCalls.RemoveAt(i);
                 }
             }
+        }
+
+        public override MGizmoBaseDrawCall Clone()
+        {
+            return new MGizmoCompositeDrawCall(drawCalls.ToList());
         }
     }
 }

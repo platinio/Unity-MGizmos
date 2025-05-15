@@ -552,7 +552,7 @@ namespace ArcaneOnyx
         public static MGizmoBaseDrawCall DebugRigidBody(Rigidbody rb, float velocityScaler)
         {
             var mat = GUITextMaterial;
-            var dc = MGizmos.RenderArrow(rb.position, rb.position + (rb.velocity.normalized * rb.velocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize);
+            var dc = MGizmos.RenderArrow(rb.position, rb.position + (rb.linearVelocity.normalized * rb.linearVelocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize);
             dc.SetMaterial(mat);
             dc.SetColor(VelocityColor);
 

@@ -15,5 +15,6 @@ namespace ArcaneOnyx
         public abstract MGizmoBaseDrawCall SetShadowCastingMode(ShadowCastingMode shadowCastingMode);
         public abstract MGizmoBaseDrawCall SetReceiveShadows(bool value);
         public abstract void Draw(Camera camera, float deltaTime);
+        public abstract MGizmoBaseDrawCall Clone();
     }
 }

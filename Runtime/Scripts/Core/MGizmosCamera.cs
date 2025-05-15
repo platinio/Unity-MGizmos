@@ -1,4 +1,4 @@
-using ArcaneOnyx;
+using System;
 using UnityEngine;
 
 namespace ArcaneOnyx
@@ -15,6 +15,11 @@ namespace ArcaneOnyx
         private void Update()
         {
             MGizmos.HandleCameraDrawCalls(renderCamera, Time.deltaTime);
+        }
+
+        private void OnDisable()
+        {
+            MGizmos.RemoveRenderCamera(renderCamera);
         }
     }
 }

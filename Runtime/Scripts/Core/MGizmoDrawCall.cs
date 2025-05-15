@@ -82,5 +82,15 @@ namespace ArcaneOnyx
             
             Graphics.DrawMesh(mesh, matrix, material, 0, camera, 0, materialPropertyBlock, shadowCastingMode, receiveShadows);
         }
+
+        public override MGizmoBaseDrawCall Clone()
+        {
+            var dc = new MGizmoDrawCall(mesh, position, rotation, scale);
+            dc.duration = duration;
+            dc.material = material;
+            dc.materialPropertyBlock = materialPropertyBlock;
+
+            return dc;
+        }
     }
 }

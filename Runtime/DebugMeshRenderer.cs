@@ -58,6 +58,18 @@ namespace ArcaneOnyx
             SceneView.duringSceneGui += DuringSceneGui;
         }
         
+        //https://stackoverflow.com/questions/256077/static-finalizer/256278#256278
+        private static readonly Destructor Finalise = new Destructor();
+        private sealed class Destructor
+        {
+            ~Destructor()
+            {
+                SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
+                RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+                SceneView.duringSceneGui -= DuringSceneGui;
+            }
+        }
+        
         private static void SceneManagerOnsceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
         {
             Reset();

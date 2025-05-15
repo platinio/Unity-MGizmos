@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace ArcaneOnyx
 {
@@ -21,7 +22,9 @@ namespace ArcaneOnyx
                 return duration;
             }
         }
-        
+
+        public override MaterialPropertyBlock MaterialPropertyBlock { get; }
+
         public void AddDrawCall(BaseMeshDrawCall drawCall)
         {
             drawCalls.Add(drawCall);
@@ -42,6 +45,26 @@ namespace ArcaneOnyx
             foreach (var dc in drawCalls)
             {
                 dc.SetDuration(duration);
+            }
+
+            return this;
+        }
+
+        public override BaseMeshDrawCall SetShadowCastingMode(ShadowCastingMode shadowCastingMode)
+        {
+            foreach (var dc in drawCalls)
+            {
+                dc.SetShadowCastingMode(shadowCastingMode);
+            }
+
+            return this;
+        }
+
+        public override BaseMeshDrawCall SetReceiveShadows(bool value)
+        {
+            foreach (var dc in drawCalls)
+            {
+                dc.SetReceiveShadows(value);
             }
 
             return this;

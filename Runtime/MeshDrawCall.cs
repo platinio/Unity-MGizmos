@@ -8,15 +8,20 @@ namespace ArcaneOnyx
         protected Vector3 position;
         protected Vector3 scale;
         protected Quaternion rotation;
-        protected Color color;
         protected Mesh mesh;
         protected float duration;
         protected Material material;
+        private MaterialPropertyBlock materialPropertyBlock;
+        private ShadowCastingMode shadowCastingMode;
+        private bool receiveShadows;
+        
         private static readonly int ColorPropertyId = Shader.PropertyToID("_Color");
 
         public override float RemainingTime => duration;
         public Material Material => material;
 
+        public override MaterialPropertyBlock MaterialPropertyBlock => materialPropertyBlock;
+        
         private float timer;
         
         public MeshDrawCall()
@@ -30,6 +35,8 @@ namespace ArcaneOnyx
             this.scale = scale;
             this.rotation = rotation;
             this.duration = 0;
+
+            materialPropertyBlock = new MaterialPropertyBlock();
         }
 
         public override BaseMeshDrawCall SetMaterial(Material material)
@@ -40,13 +47,25 @@ namespace ArcaneOnyx
 
         public override BaseMeshDrawCall SetColor(Color color)
         {
-            this.color = color;
+            materialPropertyBlock.SetColor(ColorPropertyId, color);
             return this;
         }
 
         public override BaseMeshDrawCall SetDuration(float duration)
         {
             this.duration = duration;
+            return this;
+        }
+
+        public override BaseMeshDrawCall SetShadowCastingMode(ShadowCastingMode shadowCastingMode)
+        {
+            this.shadowCastingMode = shadowCastingMode;
+            return this;
+        }
+
+        public override BaseMeshDrawCall SetReceiveShadows(bool value)
+        {
+            receiveShadows = value;
             return this;
         }
 
@@ -60,11 +79,8 @@ namespace ArcaneOnyx
            
             duration -= deltaTime;
             var matrix = Matrix4x4.TRS(position, rotation, scale);
-
-            MaterialPropertyBlock propertyBlock = new MaterialPropertyBlock();
-            propertyBlock.SetColor(ColorPropertyId, color);
             
-            Graphics.DrawMesh(mesh, matrix, material, 0, camera, 0, propertyBlock, ShadowCastingMode.On, true);
+            Graphics.DrawMesh(mesh, matrix, material, 0, camera, 0, materialPropertyBlock, shadowCastingMode, receiveShadows);
         }
     }
 }

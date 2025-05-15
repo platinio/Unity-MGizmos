@@ -9,7 +9,7 @@ namespace ArcaneOnyx
         
         private void OnCollisionEnter(Collision other)
         {
-            PhysicsDebug.DrawCollision(other).SetDuration(duration);
+            MPhysics.DrawCollision(other).SetDuration(duration);
         }
     }
 }

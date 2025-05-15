@@ -14,7 +14,7 @@ namespace Platinio
 
         private void Update()
         {
-            DebugMeshRenderer.HandleCameraDrawCalls(renderCamera, Time.deltaTime);
+            MGizmos.HandleCameraDrawCalls(renderCamera, Time.deltaTime);
         }
     }
 }

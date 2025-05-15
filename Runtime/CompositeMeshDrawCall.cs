@@ -18,7 +18,7 @@ namespace ArcaneOnyx
                 {
                     if (dc.RemainingTime > duration) duration = dc.RemainingTime;
                 }
-
+                
                 return duration;
             }
         }

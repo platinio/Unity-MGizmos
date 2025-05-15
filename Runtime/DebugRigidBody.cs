@@ -17,7 +17,7 @@ namespace ArcaneOnyx
 
         private void Update()
         {
-            PhysicsDebug.DebugRigidBody(rb, velocityScaler);
+            MPhysics.DebugRigidBody(rb, velocityScaler);
         }
     }
 }

@@ -2,9 +2,9 @@
 
 namespace ArcaneOnyx
 {
-    public static class PhysicsDebug
+    public static class MPhysics
     {
-        private const float RaycastHitSize = 0.065f;
+        private const float RaycastHitSize = 0.025f;
         private const float RaycastStemWidth = 0.0125f;
         private const float RaycastArrowHeadSize = 0.08f;
         
@@ -21,13 +21,44 @@ namespace ArcaneOnyx
 
         private const float FakeInfinity = 100000.0f;
 
-        private static Color RaycastColor = new Color(9.0f / 255, 180.0f / 255, 0, 177.0f / 255);
-        private static Color HitColor = new Color(1, 52.0f / 255, 0, 177.0f / 255);
-        private static Color NormalColor = new Color(0, 128.0f / 255, 112.0f / 255);
-        private static Color ContactPointColor = new Color(1, 52.0f / 255, 0, 177.0f / 255);
-        private static Color VelocityColor = new Color(9.0f / 255, 180.0f / 255, 0, 177.0f / 255);
+        private static Color RaycastColor = new(9.0f / 255, 180.0f / 255, 0, 177.0f / 255);
+        private static Color HitColor = new(1, 52.0f / 255, 0, 177.0f / 255);
+        private static Color NormalColor = new(0, 128.0f / 255, 112.0f / 255);
+        private static Color ContactPointColor = new(1, 52.0f / 255, 0, 177.0f / 255);
+        private static Color VelocityColor = new(9.0f / 255, 180.0f / 255, 0, 177.0f / 255);
 
         public static float GizmoDuration = 0;
+        
+        #region Materials
+        private static Material particlesStandardUnlit;
+        private static Material guiText;
+       
+        public static Material ParticlesStandardUnlitMaterial
+        {
+            get
+            {
+                if (particlesStandardUnlit == null)
+                {
+                    particlesStandardUnlit = new Material(Shader.Find("Particles/Standard Unlit"));
+                }
+
+                return particlesStandardUnlit;
+            }
+        }
+        
+        public static Material GUITextMaterial
+        {
+            get
+            {
+                if (guiText == null)
+                {
+                    guiText = new Material(Shader.Find("GUI/Text Shader"));
+                }
+
+                return guiText;
+            }
+        }        
+        #endregion
         
         public static int RaycastNonAlloc(Ray ray, RaycastHit[] results)
         {
@@ -520,8 +551,8 @@ namespace ArcaneOnyx
 
         public static BaseMeshDrawCall DebugRigidBody(Rigidbody rb, float velocityScaler)
         {
-            var mat = DebugMeshRenderer.GUIText;
-            var dc = DebugMeshRenderer.DrawArrow(rb.position, rb.position + (rb.velocity.normalized * rb.velocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize);
+            var mat = GUITextMaterial;
+            var dc = MGizmos.RenderArrow(rb.position, rb.position + (rb.velocity.normalized * rb.velocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize);
             dc.SetMaterial(mat);
             dc.SetColor(VelocityColor);
 
@@ -550,15 +581,15 @@ namespace ArcaneOnyx
         {
             CompositeMeshDrawCall compositeMeshDrawCall = new();
             
-            var contactPointMaterial = DebugMeshRenderer.Config.DefaultMaterial;
-            var dc = DebugMeshRenderer.DrawSphere(p.point, ContantPointSize);
+            var contactPointMaterial = MGizmos.Config.DefaultMaterial;
+            var dc = MGizmos.RenderSphere(p.point, ContantPointSize);
             dc.SetMaterial(contactPointMaterial);
             dc.SetColor(ContactPointColor);
             compositeMeshDrawCall.AddDrawCall(dc);
             
-            var normalMaterial = DebugMeshRenderer.ParticlesStandardUnlit;
+            var normalMaterial = ParticlesStandardUnlitMaterial;
             Vector3 impulseEnd = p.point + (p.impulse.normalized * (p.impulse.magnitude * Time.fixedDeltaTime) * CollisionImpulseMultiplier);
-            dc = DebugMeshRenderer.DrawArrow(p.point, impulseEnd, NormalStemWidth, NormalArrowHeadSize);
+            dc = MGizmos.RenderArrow(p.point, impulseEnd, NormalStemWidth, NormalArrowHeadSize);
             dc.SetMaterial(normalMaterial);
             dc.SetColor(NormalColor);
             compositeMeshDrawCall.AddDrawCall(dc);
@@ -580,8 +611,8 @@ namespace ArcaneOnyx
         {
             Vector3 rayEndPosition = ray.origin + (ray.direction * maxDistance);
             
-            var dc = DebugMeshRenderer.DrawArrow(ray.origin, rayEndPosition, RaycastStemWidth, RaycastArrowHeadSize);
-            dc.SetMaterial(DebugMeshRenderer.ParticlesStandardUnlit);
+            var dc = MGizmos.RenderArrow(ray.origin, rayEndPosition, RaycastStemWidth, RaycastArrowHeadSize);
+            dc.SetMaterial(ParticlesStandardUnlitMaterial);
             dc.SetColor(RaycastColor);
 
             return dc;
@@ -591,16 +622,16 @@ namespace ArcaneOnyx
         {
             CompositeMeshDrawCall compositeMeshDrawCall = new();
             
-            var hitMaterial = DebugMeshRenderer.GUIText;
-            var normalMaterial = DebugMeshRenderer.ParticlesStandardUnlit;
+            var hitMaterial = ParticlesStandardUnlitMaterial;
+            var normalMaterial = ParticlesStandardUnlitMaterial;
             Vector3 normalEnd = hit.point + (hit.normal.normalized * NormalLength);
             
-            var dc = DebugMeshRenderer.DrawSphere(hit.point, RaycastHitSize);
+            var dc = MGizmos.RenderSphere(hit.point, RaycastHitSize);
             dc.SetMaterial(hitMaterial);
             dc.SetColor(HitColor);
             compositeMeshDrawCall.AddDrawCall(dc);
             
-            dc = DebugMeshRenderer.DrawArrow(hit.point, normalEnd, NormalStemWidth, NormalArrowHeadSize);
+            dc = MGizmos.RenderArrow(hit.point, normalEnd, NormalStemWidth, NormalArrowHeadSize);
             dc.SetMaterial(normalMaterial);
             dc.SetColor(NormalColor);
             compositeMeshDrawCall.AddDrawCall(dc);

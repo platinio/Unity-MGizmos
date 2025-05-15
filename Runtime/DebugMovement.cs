@@ -18,7 +18,7 @@ namespace ArcaneOnyx
             if (timer < delta) return;
 
             timer = 0;
-            DebugMeshRenderer.DrawMesh(mesh, transform.position, transform.rotation, scale)
+            MGizmos.RenderMesh(mesh, transform.position, transform.rotation, scale)
                 .SetDuration(duration)
                 .SetMaterial(material);
 

@@ -13,7 +13,7 @@ namespace ArcaneOnyx
         
         private void OnDrawGizmos()
         {
-            var dc = DebugMeshRenderer.RenderCircle(transform.position, sides, radius);
+            var dc = MGizmos.RenderCircle(transform.position, sides, radius);
             dc.SetMaterial(material);
             dc.SetColor(color);
         }

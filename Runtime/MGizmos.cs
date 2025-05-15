@@ -6,45 +6,12 @@ using UnityEngine.SceneManagement;
 
 namespace ArcaneOnyx
 {
-    public static class DebugMeshRenderer
+    public static class MGizmos
     {
         public static DebugMeshRendererConfig Config => DebugMeshRendererConfig.Instance;
-        
         private static Dictionary<Camera, List<BaseMeshDrawCall>> meshDrawCalls = new();
-
-        #region Materials
-        private static Material particlesStandardUnlit;
-        private static Material guiText;
-       
-        public static Material ParticlesStandardUnlit
-        {
-            get
-            {
-                if (particlesStandardUnlit == null)
-                {
-                    particlesStandardUnlit = new Material(Shader.Find("Particles/Standard Unlit"));
-                }
-
-                return particlesStandardUnlit;
-            }
-        }
         
-        public static Material GUIText
-        {
-            get
-            {
-                if (guiText == null)
-                {
-                    guiText = new Material(Shader.Find("GUI/Text Shader"));
-                }
-
-                return guiText;
-            }
-        }        
-        #endregion
-        
-        
-        static DebugMeshRenderer()
+        static MGizmos()
         {
             SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
             SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
@@ -124,20 +91,20 @@ namespace ArcaneOnyx
         }
 
         #region Render
-        public static BaseMeshDrawCall DrawSphere(Vector3 position, float radius)
+        public static BaseMeshDrawCall RenderSphere(Vector3 position, float radius)
         {
             MeshDrawCall drawCall = new MeshDrawCall(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
             AddMeshDrawCall(drawCall);
             return drawCall;
         }
 
-        public static BaseMeshDrawCall DrawCylinder(Vector3 position) => DrawCylinder(position, Quaternion.identity, Vector3.one);
+        public static BaseMeshDrawCall RenderCylinder(Vector3 position) => RenderCylinder(position, Quaternion.identity, Vector3.one);
         
-        public static BaseMeshDrawCall DrawCylinder(Vector3 position, Quaternion rotation) => DrawCylinder(position, rotation, Vector3.one);
+        public static BaseMeshDrawCall RenderCylinder(Vector3 position, Quaternion rotation) => RenderCylinder(position, rotation, Vector3.one);
         
-        public static BaseMeshDrawCall DrawCylinder(Vector3 position, Vector3 scale) => DrawCylinder(position, Quaternion.identity, scale);
+        public static BaseMeshDrawCall RenderCylinder(Vector3 position, Vector3 scale) => RenderCylinder(position, Quaternion.identity, scale);
         
-        public static BaseMeshDrawCall DrawCylinder(Vector3 position, Quaternion rotation, Vector3 scale)
+        public static BaseMeshDrawCall RenderCylinder(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             MeshDrawCall drawCall = new MeshDrawCall(Config.CylinderMesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
@@ -157,13 +124,13 @@ namespace ArcaneOnyx
             return drawCall;
         }
 
-        public static BaseMeshDrawCall DrawCube(Vector3 position) => DrawCube(position, Quaternion.identity, Vector3.one);
+        public static BaseMeshDrawCall RenderCube(Vector3 position) => RenderCube(position, Quaternion.identity, Vector3.one);
         
-        public static BaseMeshDrawCall DrawCube(Vector3 position, Quaternion rotation) => DrawCube(position, rotation, Vector3.one);
+        public static BaseMeshDrawCall RenderCube(Vector3 position, Quaternion rotation) => RenderCube(position, rotation, Vector3.one);
 
-        public static BaseMeshDrawCall DrawCube(Vector3 position, Vector3 scale) => DrawCube(position, Quaternion.identity, scale);
+        public static BaseMeshDrawCall RenderCube(Vector3 position, Vector3 scale) => RenderCube(position, Quaternion.identity, scale);
         
-        public static BaseMeshDrawCall DrawCube(Vector3 position, Quaternion rotation, Vector3 scale)
+        public static BaseMeshDrawCall RenderCube(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             MeshDrawCall drawCall = new MeshDrawCall(Config.CubeMesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
@@ -171,13 +138,13 @@ namespace ArcaneOnyx
             return drawCall;
         }
 
-        public static BaseMeshDrawCall DrawQuad(Vector3 position) => DrawQuad(position, Quaternion.identity, Vector3.one);
+        public static BaseMeshDrawCall RenderQuad(Vector3 position) => RenderQuad(position, Quaternion.identity, Vector3.one);
         
-        public static BaseMeshDrawCall DrawQuad(Vector3 position, Quaternion rotation) => DrawQuad(position, rotation, Vector3.one);
+        public static BaseMeshDrawCall RenderQuad(Vector3 position, Quaternion rotation) => RenderQuad(position, rotation, Vector3.one);
         
-        public static BaseMeshDrawCall DrawQuad(Vector3 position, Vector3 scale) => DrawQuad(position, Quaternion.identity, scale);
+        public static BaseMeshDrawCall RenderQuad(Vector3 position, Vector3 scale) => RenderQuad(position, Quaternion.identity, scale);
         
-        public static BaseMeshDrawCall DrawQuad(Vector3 position, Quaternion rotation, Vector3 scale)
+        public static BaseMeshDrawCall RenderQuad(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             MeshDrawCall drawCall = new MeshDrawCall(Config.QuadMesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
@@ -230,13 +197,13 @@ namespace ArcaneOnyx
             return compositeMeshDrawCall;
         }
 
-        public static BaseMeshDrawCall DrawMesh(Mesh mesh, Vector3 position) => DrawMesh(mesh, position, Quaternion.identity, Vector3.one);
+        public static BaseMeshDrawCall RenderMesh(Mesh mesh, Vector3 position) => RenderMesh(mesh, position, Quaternion.identity, Vector3.one);
         
-        public static BaseMeshDrawCall DrawMesh(Mesh mesh, Vector3 position, Quaternion rotation) => DrawMesh(mesh, position, rotation, Vector3.one);
+        public static BaseMeshDrawCall RenderMesh(Mesh mesh, Vector3 position, Quaternion rotation) => RenderMesh(mesh, position, rotation, Vector3.one);
         
-        public static BaseMeshDrawCall DrawMesh(Mesh mesh, Vector3 position, Vector3 scale) => DrawMesh(mesh, position, Quaternion.identity, scale);
+        public static BaseMeshDrawCall RenderMesh(Mesh mesh, Vector3 position, Vector3 scale) => RenderMesh(mesh, position, Quaternion.identity, scale);
 
-        public static BaseMeshDrawCall DrawMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
+        public static BaseMeshDrawCall RenderMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
         {
             MeshDrawCall drawCall = new MeshDrawCall(mesh, position, rotation, scale);
             AddMeshDrawCall(drawCall);
@@ -244,7 +211,7 @@ namespace ArcaneOnyx
             return drawCall;
         }
         
-        public static BaseMeshDrawCall DrawArrow(Vector3 from, Vector3 to, float stemWidth = 0.01f, float arrowHeadSize = 0.5f)
+        public static BaseMeshDrawCall RenderArrow(Vector3 from, Vector3 to, float stemWidth = 0.01f, float arrowHeadSize = 0.5f)
         {
             var compositeMeshDrawCall = new CompositeMeshDrawCall();
             

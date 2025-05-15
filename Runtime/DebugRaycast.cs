@@ -16,7 +16,7 @@ namespace ArcaneOnyx
             
             Ray ray = new Ray(fromRaycast.position, (toRaycast.position - fromRaycast.position).normalized);
             float d = Vector3.Distance(fromRaycast.position, toRaycast.position);
-            PhysicsDebug.Raycast(ray);
+            MPhysics.Raycast(ray);
         }
     }
 

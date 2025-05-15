@@ -13,7 +13,7 @@ namespace Platinio
         private void OnDrawGizmos()
         {
             if (from == null || to == null) return;
-            DebugMeshRenderer.DrawArrow(from.position, to.position, 0.05f, arrowHeadSize)
+            MGizmos.RenderArrow(from.position, to.position, 0.05f, arrowHeadSize)
                 .SetMaterial(material);
         }
     }

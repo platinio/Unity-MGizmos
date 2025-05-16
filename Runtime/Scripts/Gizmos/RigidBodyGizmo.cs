@@ -15,11 +15,8 @@ namespace ArcaneOnyx
 
         private void Update()
         {
-            float v = MPhysics.Duration;
-            
-            MPhysics.Duration = 0;
-            MPhysics.DebugRigidBody(rb, velocityScaler);
-            MPhysics.Duration = v;
+            var dc = MPhysics.RenderRigidBody(rb, velocityScaler);
+            MGizmos.AddMeshDrawCall(dc);
         }
     }
 }

@@ -13,19 +13,25 @@ namespace ArcaneOnyx
         private void OnCollisionEnter(Collision other)
         {
             if (!showOnCollisionEnter) return;
-            MPhysics.DrawCollision(other).SetDuration(duration);
+            
+            var dc = MPhysics.RenderCollision(other).SetDuration(duration);
+            MGizmos.AddMeshDrawCall(dc);
         }
 
         private void OnCollisionStay(Collision other)
         {
             if (!showOnCollisionStay) return;
-            MPhysics.DrawCollision(other).SetDuration(duration);
+            
+            var dc = MPhysics.RenderCollision(other).SetDuration(duration);
+            MGizmos.AddMeshDrawCall(dc);
         }
 
         private void OnCollisionExit(Collision other)
         {
             if (!showOnCollisionExit) return;
-            MPhysics.DrawCollision(other).SetDuration(duration);
+            
+            var dc = MPhysics.RenderCollision(other).SetDuration(duration);
+            MGizmos.AddMeshDrawCall(dc);
         }
     }
 }

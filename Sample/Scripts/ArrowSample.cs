@@ -1,5 +1,4 @@
-﻿using ArcaneOnyx;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace ArcaneOnyx
 {
@@ -15,7 +14,8 @@ namespace ArcaneOnyx
             if (from == null || to == null) return;
             
             var dc = MGizmos.RenderArrow(from.position, to.position, 0.05f, arrowHeadSize);
-            if (material != null) dc.SetMaterial(material);
+            dc.SetMaterial(material);
+            MGizmos.AddMeshDrawCall(dc);
         }
     }
 }

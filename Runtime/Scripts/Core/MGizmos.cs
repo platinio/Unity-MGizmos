@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.SceneManagement;
 
 namespace ArcaneOnyx
@@ -11,14 +10,15 @@ namespace ArcaneOnyx
         public static MGizmosRendererConfig Config => MGizmosRendererConfig.Instance;
         private static Dictionary<Camera, List<MGizmoBaseDrawCall>> meshDrawCalls = new();
         
+        private static float sceneGuiLastTime = 0;
+        
         static MGizmos()
         {
             SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
             SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
-            
-            //listen this for scriptable base pipelines
-            //RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
-            //RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+
+            EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
+            EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             
             //listen this for scene view render
             SceneView.duringSceneGui -= DuringSceneGui;
@@ -31,12 +31,17 @@ namespace ArcaneOnyx
         {
             ~Destructor()
             {
+                EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
                 SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
-                RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
                 SceneView.duringSceneGui -= DuringSceneGui;
             }
         }
-        
+
+        private static void OnPlayModeStateChanged(PlayModeStateChange playModeStateChange)
+        {
+            Reset();
+        }
+
         private static void SceneManagerOnsceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
         {
             Reset();
@@ -44,16 +49,13 @@ namespace ArcaneOnyx
 
         private static void Reset()
         {
-            meshDrawCalls.Clear();
+            meshDrawCalls?.Clear();
         }
         
-        private static void AddMeshDrawCall(MGizmoBaseDrawCall drawCall)
+        public static void AddMeshDrawCall(MGizmoBaseDrawCall drawCall)
         {
-            drawCall.SetColor(Config.DefaultColor)
-                .SetMaterial(Config.DefaultMaterial);
-            
             var cameras = meshDrawCalls.Keys;
-
+            
             foreach (var camera in cameras)
             {
                 meshDrawCalls[camera].Add(drawCall.Clone());
@@ -62,12 +64,21 @@ namespace ArcaneOnyx
         
         private static void DuringSceneGui(SceneView sceneView)
         {
-            HandleCameraDrawCalls(sceneView.camera, 1 / 30.0f);
+            if (sceneGuiLastTime == 0)
+            {
+                sceneGuiLastTime = GetTimeSinceStartup();
+            }
+
+            HandleCameraDrawCalls(sceneView.camera, GetTimeSinceStartup() - sceneGuiLastTime);
+            sceneGuiLastTime = GetTimeSinceStartup();
         }
 
-        private static void OnBeginCameraRendering(ScriptableRenderContext context, Camera camera)
+        private static float GetTimeSinceStartup()
         {
-            //HandleCameraDrawCalls(camera, Time.deltaTime);
+#if UNITY_EDITOR
+            return (float) EditorApplication.timeSinceStartup;
+#endif
+            return Time.time;
         }
 
         public static void HandleCameraDrawCalls(Camera camera, float deltaTime)
@@ -97,11 +108,17 @@ namespace ArcaneOnyx
         }
 
         #region Render
+        private static void InitializeMeshDrawCall(MGizmoBaseDrawCall drawCall)
+        {
+            drawCall.SetColor(Config.DefaultColor)
+                .SetMaterial(Config.DefaultMaterial);
+        }
+        
         public static MGizmoBaseDrawCall RenderSphere(Vector3 position, float radius)
         {
-            MGizmoDrawCall drawCall = new MGizmoDrawCall(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
-            AddMeshDrawCall(drawCall);
-            return drawCall;
+            MGizmoDrawCall dc = new MGizmoDrawCall(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
+            InitializeMeshDrawCall(dc);
+            return dc;
         }
 
         public static MGizmoBaseDrawCall RenderCylinder(Vector3 position) => RenderCylinder(position, Quaternion.identity, Vector3.one);
@@ -112,9 +129,9 @@ namespace ArcaneOnyx
         
         public static MGizmoBaseDrawCall RenderCylinder(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MGizmoDrawCall drawCall = new MGizmoDrawCall(Config.CylinderMesh, position, rotation, scale);
-            AddMeshDrawCall(drawCall);
-            return drawCall;
+            MGizmoDrawCall dc = new MGizmoDrawCall(Config.CylinderMesh, position, rotation, scale);
+            InitializeMeshDrawCall(dc);
+            return dc;
         }
 
         public static MGizmoBaseDrawCall RenderLine(Vector3 from, Vector3 to) => RenderLine(from, to, 0.01f);
@@ -124,10 +141,10 @@ namespace ArcaneOnyx
             float d = Vector3.Distance(from, to);
             Vector3 dir = (to - from).normalized;
 
-            MGizmoDrawCall drawCall = new MGizmoDrawCall(Config.CylinderMesh, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
-            AddMeshDrawCall(drawCall);
+            MGizmoDrawCall dc = new MGizmoDrawCall(Config.CylinderMesh, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
+            InitializeMeshDrawCall(dc);
 
-            return drawCall;
+            return dc;
         }
 
         public static MGizmoBaseDrawCall RenderCube(Vector3 position) => RenderCube(position, Quaternion.identity, Vector3.one);
@@ -138,10 +155,10 @@ namespace ArcaneOnyx
         
         public static MGizmoBaseDrawCall RenderCube(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MGizmoDrawCall drawCall = new MGizmoDrawCall(Config.CubeMesh, position, rotation, scale);
-            AddMeshDrawCall(drawCall);
+            MGizmoDrawCall dc = new MGizmoDrawCall(Config.CubeMesh, position, rotation, scale);
+            InitializeMeshDrawCall(dc);
 
-            return drawCall;
+            return dc;
         }
 
         public static MGizmoBaseDrawCall RenderQuad(Vector3 position) => RenderQuad(position, Quaternion.identity, Vector3.one);
@@ -152,10 +169,10 @@ namespace ArcaneOnyx
         
         public static MGizmoBaseDrawCall RenderQuad(Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MGizmoDrawCall drawCall = new MGizmoDrawCall(Config.QuadMesh, position, rotation, scale);
-            AddMeshDrawCall(drawCall);
+            MGizmoDrawCall dc = new MGizmoDrawCall(Config.QuadMesh, position, rotation, scale);
+            InitializeMeshDrawCall(dc);
 
-            return drawCall;
+            return dc;
         }
         
         public static MGizmoBaseDrawCall RenderCircle(Vector3 center, int sides, float radius) => RenderCircle(center, sides, radius, 0.01f, Vector3.up);
@@ -200,6 +217,8 @@ namespace ArcaneOnyx
             var lastDC = RenderLine(positions[positions.Length - 1], positions[0], lineWidth);
             compositeMeshDrawCall.AddDrawCall(lastDC);
             
+            InitializeMeshDrawCall(compositeMeshDrawCall);
+            
             return compositeMeshDrawCall;
         }
 
@@ -211,10 +230,10 @@ namespace ArcaneOnyx
 
         public static MGizmoBaseDrawCall RenderMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
         {
-            MGizmoDrawCall drawCall = new MGizmoDrawCall(mesh, position, rotation, scale);
-            AddMeshDrawCall(drawCall);
+            MGizmoDrawCall dc = new MGizmoDrawCall(mesh, position, rotation, scale);
+            InitializeMeshDrawCall(dc);
 
-            return drawCall;
+            return dc;
         }
         
         public static MGizmoBaseDrawCall RenderArrow(Vector3 from, Vector3 to, float stemWidth = 0.01f, float arrowHeadSize = 0.5f)
@@ -238,8 +257,8 @@ namespace ArcaneOnyx
             
             compositeMeshDrawCall.AddDrawCall(cylinderDrawCall);
             compositeMeshDrawCall.AddDrawCall(arrowHeadDrawCall);
-            AddMeshDrawCall(compositeMeshDrawCall);
-            
+           
+            InitializeMeshDrawCall(compositeMeshDrawCall);
             return compositeMeshDrawCall;
         }
         #endregion

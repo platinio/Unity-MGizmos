@@ -429,7 +429,7 @@ namespace ArcaneOnyx
             
             return result;
 #else
-            return Physics.Raycast(ray, out hitInfo));
+            return Physics.Raycast(ray, out hitInfo);
 #endif
         }
         
@@ -623,8 +623,16 @@ namespace ArcaneOnyx
 
         public static MGizmoBaseDrawCall RenderRigidBody(Rigidbody rb, float velocityScaler)
         {
+            Vector3 rbVelocity = Vector3.zero;
+            
+            #if UNITY_6000_0_OR_NEWER
+            rbVelocity = rb.linearVelocity;
+            #else
+            rbVelocity = rb.velocity;
+            #endif
+            
             var mat = GUITextMaterial;
-            var dc = MGizmos.RenderArrow(rb.position, rb.position + (rb.linearVelocity.normalized * rb.linearVelocity.magnitude * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize);
+            var dc = MGizmos.RenderArrow(rb.position, rb.position + (rbVelocity * velocityScaler), VelocityStemWidth, VelocityArrowHeadSize);
             dc.SetMaterial(mat);
             dc.SetColor(VelocityColor);
 

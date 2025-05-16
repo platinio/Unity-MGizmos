@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -17,12 +19,14 @@ namespace ArcaneOnyx
             SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
             SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
 
+#if UNITY_EDITOR
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             
             //listen this for scene view render
             SceneView.duringSceneGui -= DuringSceneGui;
             SceneView.duringSceneGui += DuringSceneGui;
+#endif
         }
         
         //https://stackoverflow.com/questions/256077/static-finalizer/256278#256278
@@ -31,16 +35,21 @@ namespace ArcaneOnyx
         {
             ~Destructor()
             {
-                EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
                 SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
+                
+#if UNITY_EDITOR
+                EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
                 SceneView.duringSceneGui -= DuringSceneGui;
+#endif
             }
         }
 
+#if UNITY_EDITOR
         private static void OnPlayModeStateChanged(PlayModeStateChange playModeStateChange)
         {
             Reset();
         }
+#endif
 
         private static void SceneManagerOnsceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
         {
@@ -62,6 +71,7 @@ namespace ArcaneOnyx
             }
         }
         
+#if UNITY_EDITOR
         private static void DuringSceneGui(SceneView sceneView)
         {
             if (sceneGuiLastTime == 0)
@@ -72,6 +82,7 @@ namespace ArcaneOnyx
             HandleCameraDrawCalls(sceneView.camera, GetTimeSinceStartup() - sceneGuiLastTime);
             sceneGuiLastTime = GetTimeSinceStartup();
         }
+#endif
 
         private static float GetTimeSinceStartup()
         {

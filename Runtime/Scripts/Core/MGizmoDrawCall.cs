@@ -41,6 +41,7 @@ namespace ArcaneOnyx
 
         public override MGizmoBaseDrawCall SetMaterial(Material material)
         {
+            if (material == null) return this;
             this.material = material;
             return this;
         }

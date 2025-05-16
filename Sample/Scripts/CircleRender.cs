@@ -4,7 +4,6 @@ namespace ArcaneOnyx
 {
     public class CircleRender : MonoBehaviour
     {
-        
         [SerializeField] private int sides;
         [SerializeField] private float radius;
         [SerializeField] private float lineWidth;

@@ -3,7 +3,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     public class MGizmoCompositeDrawCall : MGizmoBaseDrawCall
     {
@@ -24,7 +24,7 @@ namespace ArcaneOnyx
             }
         }
 
-        public override MaterialPropertyBlock MaterialPropertyBlock { get; }
+        public override MaterialPropertyBlock MaterialPropertyBlock => null;
 
         public MGizmoCompositeDrawCall() { }
 

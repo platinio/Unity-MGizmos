@@ -1,11 +1,12 @@
-using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
+
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     public static class MGizmos
     {

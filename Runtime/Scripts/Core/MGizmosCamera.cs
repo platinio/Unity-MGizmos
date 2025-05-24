@@ -1,7 +1,6 @@
-using System;
 using UnityEngine;
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     public class MGizmosCamera : MonoBehaviour
     {

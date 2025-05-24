@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     public class CircleRender : MonoBehaviour
     {

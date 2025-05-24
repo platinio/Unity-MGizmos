@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     [ExecuteAlways]
     public class MGizmoCameraExecuteAlways : MGizmosCamera { }

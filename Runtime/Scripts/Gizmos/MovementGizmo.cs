@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     public class MovementGizmo : MonoBehaviour
     {
@@ -18,9 +18,11 @@ namespace ArcaneOnyx
             if (timer < delta) return;
 
             timer = 0;
-            MGizmos.RenderMesh(mesh, transform.position, transform.rotation, scale)
+            var dc = MGizmos.RenderMesh(mesh, transform.position, transform.rotation, scale)
                 .SetDuration(duration)
                 .SetMaterial(material);
+            
+            MGizmos.AddMeshDrawCall(dc);
         }
     }
 }

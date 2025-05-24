@@ -1,7 +1,6 @@
-﻿using ArcaneOnyx;
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     [CreateAssetMenu(menuName = "Debug Mesh Renderer Config")]
     public class MGizmosRendererConfig : ScriptableSingleton<MGizmosRendererConfig>

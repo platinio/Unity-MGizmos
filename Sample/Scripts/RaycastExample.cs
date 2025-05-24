@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     public class RaycastExample : MonoBehaviour
     {
@@ -12,7 +12,6 @@ namespace ArcaneOnyx
             if (fromRaycast == null || toRaycast == null) return;
             
             Ray ray = new Ray(fromRaycast.position, (toRaycast.position - fromRaycast.position).normalized);
-            float d = Vector3.Distance(fromRaycast.position, toRaycast.position);
             MPhysics.Raycast(ray);
         }
     }

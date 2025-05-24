@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     public class CollisionGizmos : MonoBehaviour
     {

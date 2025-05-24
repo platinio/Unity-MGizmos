@@ -48,6 +48,7 @@ namespace ArcaneOnyx.MeshGizmos
 
         public override MGizmoBaseDrawCall SetColor(Color color)
         {
+            if (!MGizmos.IsEnable) return this;
             materialPropertyBlock.SetColor(ColorPropertyId, color);
             return this;
         }
@@ -72,6 +73,12 @@ namespace ArcaneOnyx.MeshGizmos
 
         public override void Draw(Camera camera, float deltaTime)
         {
+            if (!MGizmos.IsEnable)
+            {
+                duration = float.MinValue;
+                return;
+            }
+
             if (camera == null || material == null)
             {
                 duration = float.MinValue;

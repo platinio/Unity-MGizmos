@@ -14,7 +14,19 @@ namespace ArcaneOnyx.MeshGizmos
         private static Dictionary<Camera, List<MGizmoBaseDrawCall>> meshDrawCalls = new();
         
         private static float sceneGuiLastTime = 0;
-        
+
+        public static bool IsEnable
+        {
+            get
+            {
+                #if UNITY_EDITOR || SHOW_MESH_GIZMOS_IN_BUILD
+                return true;
+                #endif
+
+                return false;
+            }
+        }
+
         static MGizmos()
         {
             SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
@@ -64,6 +76,8 @@ namespace ArcaneOnyx.MeshGizmos
         
         public static void AddMeshDrawCall(MGizmoBaseDrawCall drawCall)
         {
+            if (!IsEnable) return;
+            
             var cameras = meshDrawCalls.Keys;
             
             foreach (var camera in cameras)
@@ -95,6 +109,8 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static void HandleCameraDrawCalls(Camera camera, float deltaTime)
         {
+            if (!IsEnable) return;
+
             //if the camera doesnt exist add it
             if (!meshDrawCalls.TryGetValue(camera, out var drawCalls))
             {
@@ -128,6 +144,8 @@ namespace ArcaneOnyx.MeshGizmos
         
         public static MGizmoBaseDrawCall RenderSphere(Vector3 position, float radius)
         {
+            if (!IsEnable) return new MGizmoDrawCall();
+            
             MGizmoDrawCall dc = new MGizmoDrawCall(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
             InitializeMeshDrawCall(dc);
             return dc;
@@ -141,6 +159,8 @@ namespace ArcaneOnyx.MeshGizmos
         
         public static MGizmoBaseDrawCall RenderCylinder(Vector3 position, Quaternion rotation, Vector3 scale)
         {
+            if (!IsEnable) return new MGizmoDrawCall();
+            
             MGizmoDrawCall dc = new MGizmoDrawCall(Config.CylinderMesh, position, rotation, scale);
             InitializeMeshDrawCall(dc);
             return dc;
@@ -150,6 +170,8 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderLine(Vector3 from, Vector3 to, float lineWidth)
         {
+            if (!IsEnable) return new MGizmoDrawCall();
+            
             float d = Vector3.Distance(from, to);
             Vector3 dir = (to - from).normalized;
 
@@ -167,6 +189,8 @@ namespace ArcaneOnyx.MeshGizmos
         
         public static MGizmoBaseDrawCall RenderCube(Vector3 position, Quaternion rotation, Vector3 scale)
         {
+            if (!IsEnable) return new MGizmoDrawCall();
+            
             MGizmoDrawCall dc = new MGizmoDrawCall(Config.CubeMesh, position, rotation, scale);
             InitializeMeshDrawCall(dc);
 
@@ -181,6 +205,8 @@ namespace ArcaneOnyx.MeshGizmos
         
         public static MGizmoBaseDrawCall RenderQuad(Vector3 position, Quaternion rotation, Vector3 scale)
         {
+            if (!IsEnable) return new MGizmoDrawCall();
+            
             MGizmoDrawCall dc = new MGizmoDrawCall(Config.QuadMesh, position, rotation, scale);
             InitializeMeshDrawCall(dc);
 
@@ -195,6 +221,8 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderCircle(Vector3 center, int sides, float radius, float lineWidth, Vector3 upwards)
         {
+            if (!IsEnable) return new MGizmoDrawCall();
+            
             var compositeMeshDrawCall = new MGizmoCompositeDrawCall();
             
             Vector3[] positions = new Vector3[sides];
@@ -242,6 +270,8 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderMesh(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
         {
+            if (!IsEnable) return new MGizmoDrawCall();
+            
             MGizmoDrawCall dc = new MGizmoDrawCall(mesh, position, rotation, scale);
             InitializeMeshDrawCall(dc);
 
@@ -250,6 +280,8 @@ namespace ArcaneOnyx.MeshGizmos
         
         public static MGizmoBaseDrawCall RenderArrow(Vector3 from, Vector3 to, float stemWidth = 0.01f, float arrowHeadSize = 0.5f)
         {
+            if (!IsEnable) return new MGizmoDrawCall();
+            
             var compositeMeshDrawCall = new MGizmoCompositeDrawCall();
             
             float d = Vector3.Distance(from, to);

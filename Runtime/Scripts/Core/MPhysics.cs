@@ -62,7 +62,11 @@ namespace ArcaneOnyx.MeshGizmos
         
         public static int RaycastNonAlloc(Ray ray, RaycastHit[] results)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.RaycastNonAlloc(ray, results);
+            }
+
             int size = Physics.RaycastNonAlloc(ray, results);
             var dc = RenderRay(ray).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -74,14 +78,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return size;
-#else
-            return Physics.RaycastNonAlloc(ray, results);
-#endif
         }
         
         public static int RaycastNonAlloc(Ray ray, RaycastHit[] results, float maxDistance)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.RaycastNonAlloc(ray, results, maxDistance);
+            }
+
             int size = Physics.RaycastNonAlloc(ray, results, maxDistance);
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -93,14 +98,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return size;
-#else
-            return Physics.RaycastNonAlloc(ray, results, maxDistance);
-#endif
         }
         
         public static int RaycastNonAlloc(Ray ray, RaycastHit[] results, float maxDistance, int layerMask)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.RaycastNonAlloc(ray, results, maxDistance, layerMask);
+            }
+
             int size = Physics.RaycastNonAlloc(ray, results, maxDistance, layerMask);
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -112,14 +118,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return size;
-#else
-            return Physics.RaycastNonAlloc(ray, results, maxDistance, layerMask);
-#endif
         }
         
         public static int RaycastNonAlloc(Ray ray, RaycastHit[] results, float maxDistance, int layerMask, QueryTriggerInteraction queryTriggerInteraction)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.RaycastNonAlloc(ray, results, maxDistance, layerMask, queryTriggerInteraction);
+            }
+
             int size = Physics.RaycastNonAlloc(ray, results, maxDistance, layerMask, queryTriggerInteraction);
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -131,14 +138,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return size;
-#else
-            return Physics.RaycastNonAlloc(ray, results, maxDistance, layerMask, queryTriggerInteraction);
-#endif
         }
         
         public static int RaycastNonAlloc(Vector3 origin, Vector3 direction, RaycastHit[] results)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.RaycastNonAlloc(origin, direction, results);
+            }
+
             int size = Physics.RaycastNonAlloc(origin, direction, results);
             var dc = RenderRay(origin, direction).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -150,14 +158,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return size;
-#else
-            return Physics.RaycastNonAlloc(origin, direction, results);
-#endif
         }
         
         public static int RaycastNonAlloc(Vector3 origin, Vector3 direction, RaycastHit[] results, float maxDistance)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.RaycastNonAlloc(origin, direction, results, maxDistance);
+            }
+
             int size = Physics.RaycastNonAlloc(origin, direction, results, maxDistance);
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -169,14 +178,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return size;
-#else
-            return Physics.RaycastNonAlloc(origin, direction, results, maxDistance);
-#endif
         }
         
         public static int RaycastNonAlloc(Vector3 origin, Vector3 direction, RaycastHit[] results, float maxDistance, int layerMask)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.RaycastNonAlloc(origin, direction, results, maxDistance, layerMask);
+            }
+
             int size = Physics.RaycastNonAlloc(origin, direction, results, maxDistance, layerMask);
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -188,14 +198,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return size;
-#else
-            return Physics.RaycastNonAlloc(origin, direction, results, maxDistance, layerMask);
-#endif
         }
         
         public static int RaycastNonAlloc(Vector3 origin, Vector3 direction, RaycastHit[] results, float maxDistance, int layerMask, QueryTriggerInteraction queryTriggerInteraction)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.RaycastNonAlloc(origin, direction, results, maxDistance, layerMask, queryTriggerInteraction);
+            }
+
             int size = Physics.RaycastNonAlloc(origin, direction, results, maxDistance, layerMask, queryTriggerInteraction);
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -207,15 +218,13 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return size;
-#else
-            return Physics.RaycastNonAlloc(origin, direction, results, maxDistance, layerMask, queryTriggerInteraction);
-#endif
         }
         
         public static RaycastHit[] RaycastAll(Ray ray)
         {
             var raycastHits = Physics.RaycastAll(ray);
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable) return raycastHits;
+
             var dc = RenderRay(ray).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
             
@@ -224,14 +233,15 @@ namespace ArcaneOnyx.MeshGizmos
                 dc = RenderRaycastHit(hit).SetDuration(Duration);
                 MGizmos.AddMeshDrawCall(dc);
             }
-#endif
+
             return raycastHits;
         }
         
         public static RaycastHit[] RaycastAll(Ray ray, float maxDistance)
         {
             var raycastHits = Physics.RaycastAll(ray, maxDistance);
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable) return raycastHits;
+
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
             
@@ -240,14 +250,15 @@ namespace ArcaneOnyx.MeshGizmos
                 dc = RenderRaycastHit(hit).SetDuration(Duration);
                 MGizmos.AddMeshDrawCall(dc);
             }
-#endif
+
             return raycastHits;
         }
         
         public static RaycastHit[] RaycastAll(Ray ray, float maxDistance, int layerMask)
         {
             var raycastHits = Physics.RaycastAll(ray, maxDistance, layerMask);
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable) return raycastHits;
+
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
             
@@ -256,14 +267,15 @@ namespace ArcaneOnyx.MeshGizmos
                 dc = RenderRaycastHit(hit).SetDuration(Duration);
                 MGizmos.AddMeshDrawCall(dc);
             }
-#endif
+
             return raycastHits;
         }
         
         public static RaycastHit[] RaycastAll(Ray ray, float maxDistance, int layerMask, QueryTriggerInteraction queryTriggerInteraction)
         {
             var raycastHits = Physics.RaycastAll(ray, maxDistance, layerMask, queryTriggerInteraction);
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable) return raycastHits;
+
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
             
@@ -272,7 +284,7 @@ namespace ArcaneOnyx.MeshGizmos
                 dc = RenderRaycastHit(hit).SetDuration(Duration);
                 MGizmos.AddMeshDrawCall(dc);
             }
-#endif
+
             return raycastHits;
         }
       
@@ -280,7 +292,8 @@ namespace ArcaneOnyx.MeshGizmos
         public static RaycastHit[] RaycastAll(Vector3 origin, Vector3 direction)
         {
             var raycastHits = Physics.RaycastAll(origin, direction);
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable) return raycastHits;
+
             var dc = RenderRay(origin, direction).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
             
@@ -289,14 +302,15 @@ namespace ArcaneOnyx.MeshGizmos
                 dc = RenderRaycastHit(hit).SetDuration(Duration);
                 MGizmos.AddMeshDrawCall(dc);
             }
-#endif
+
             return raycastHits;
         }
         
         public static RaycastHit[] RaycastAll(Vector3 origin, Vector3 direction, float maxDistance)
         {
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance);
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable) return raycastHits;
+
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
             
@@ -305,14 +319,15 @@ namespace ArcaneOnyx.MeshGizmos
                 dc = RenderRaycastHit(hit).SetDuration(Duration);
                 MGizmos.AddMeshDrawCall(dc);
             }
-#endif
+
             return raycastHits;
         }
         
         public static RaycastHit[] RaycastAll(Vector3 origin, Vector3 direction, float maxDistance, int layerMask)
         {
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance, layerMask);
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable) return raycastHits;
+
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
             
@@ -321,14 +336,15 @@ namespace ArcaneOnyx.MeshGizmos
                 dc = RenderRaycastHit(hit).SetDuration(Duration);
                 MGizmos.AddMeshDrawCall(dc);
             }
-#endif
+
             return raycastHits;
         }
         
         public static RaycastHit[] RaycastAll(Vector3 origin, Vector3 direction, float maxDistance, int layerMask, QueryTriggerInteraction queryTriggerInteraction)
         {
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance, layerMask, queryTriggerInteraction);
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable) return raycastHits;
+
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
             
@@ -337,13 +353,17 @@ namespace ArcaneOnyx.MeshGizmos
                 dc = RenderRaycastHit(hit).SetDuration(Duration);
                 MGizmos.AddMeshDrawCall(dc);
             }
-#endif
+
             return raycastHits;
         }
         
         public static bool Raycast(Ray ray)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(ray);
+            }
+
             var raycastHits = Physics.RaycastAll(ray);
             var dc = RenderRay(ray).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -355,14 +375,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return raycastHits != null && raycastHits.Length > 0;
-#else
-            return Physics.Raycast(ray);
-#endif
         }
         
         public static bool Raycast(Ray ray, float maxDistance)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(ray, maxDistance);
+            }
+
             var raycastHits = Physics.RaycastAll(ray, maxDistance);
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -374,14 +395,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return raycastHits != null && raycastHits.Length > 0;
-#else
-            return Physics.Raycast(ray, maxDistance);
-#endif
         }
         
         public static bool Raycast(Ray ray, float maxDistance, int layerMask)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(ray, maxDistance, layerMask);
+            }
+
             var raycastHits = Physics.RaycastAll(ray, maxDistance, layerMask);
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -393,14 +415,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return raycastHits != null && raycastHits.Length > 0;
-#else
-            return Physics.Raycast(ray, maxDistance, layerMask);
-#endif
         }
         
         public static bool Raycast(Ray ray, float maxDistance, int layerMask, QueryTriggerInteraction queryTriggerInteraction)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(ray, maxDistance, layerMask, queryTriggerInteraction);
+            }
+
             var raycastHits = Physics.RaycastAll(ray, maxDistance, layerMask, queryTriggerInteraction);
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -412,14 +435,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return raycastHits != null && raycastHits.Length > 0;
-#else
-            return Physics.Raycast(ray, maxDistance, layerMask, queryTriggerInteraction);
-#endif
         }
         
         public static bool Raycast(Ray ray, out RaycastHit hitInfo)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(ray, out hitInfo);
+            }
+
             var result = Physics.Raycast(ray, out hitInfo);
             var dc = RenderRay(ray).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -428,14 +452,15 @@ namespace ArcaneOnyx.MeshGizmos
             MGizmos.AddMeshDrawCall(dc);
             
             return result;
-#else
-            return Physics.Raycast(ray, out hitInfo);
-#endif
         }
         
         public static bool Raycast(Ray ray, out RaycastHit hitInfo, float maxDistance)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(ray, out hitInfo, maxDistance);
+            }
+
             var result = Physics.Raycast(ray, out hitInfo, maxDistance);
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -444,14 +469,15 @@ namespace ArcaneOnyx.MeshGizmos
             MGizmos.AddMeshDrawCall(dc);
             
             return result;
-#else
-            return Physics.Raycast(ray, out hitInfo, maxDistance);
-#endif
         }
         
         public static bool Raycast(Ray ray, out RaycastHit hitInfo, float maxDistance, int layerMask)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(ray, out hitInfo, maxDistance, layerMask);
+            }
+
             var result = Physics.Raycast(ray, out hitInfo, maxDistance, layerMask);
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -460,14 +486,15 @@ namespace ArcaneOnyx.MeshGizmos
             MGizmos.AddMeshDrawCall(dc);
             
             return result;
-#else
-            return Physics.Raycast(ray, out hitInfo, maxDistance, layerMask);
-#endif
         }
         
         public static bool Raycast(Ray ray, out RaycastHit hitInfo, float maxDistance, int layerMask, QueryTriggerInteraction queryTriggerInteraction)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(ray, out hitInfo, maxDistance, layerMask, queryTriggerInteraction);
+            }
+
             var result = Physics.Raycast(ray, out hitInfo, maxDistance, layerMask, queryTriggerInteraction);
             var dc = RenderRay(ray, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -476,14 +503,15 @@ namespace ArcaneOnyx.MeshGizmos
             MGizmos.AddMeshDrawCall(dc);
             
             return result;
-#else
-            return Physics.Raycast(ray, out hitInfo, maxDistance, layerMask, queryTriggerInteraction);
-#endif
         }
         
         public static bool Raycast(Vector3 origin, Vector3 direction)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(origin, direction);
+            }
+
             var raycastHits = Physics.RaycastAll(origin, direction);
             var dc = RenderRay(origin, direction).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -495,14 +523,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return raycastHits != null && raycastHits.Length > 0;
-#else
-            return Physics.Raycast(origin, direction);
-#endif
         }
         
         public static bool Raycast(Vector3 origin, Vector3 direction, float maxDistance)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(origin, direction, maxDistance);
+            }
+
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance);
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -514,14 +543,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return raycastHits != null && raycastHits.Length > 0;
-#else
-            return Physics.Raycast(origin, direction, maxDistance);
-#endif
         }
         
         public static bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, int layerMask)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(origin, direction, maxDistance, layerMask);
+            }
+
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance, layerMask);
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -533,14 +563,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return raycastHits != null && raycastHits.Length > 0;
-#else
-            return Physics.Raycast(origin, direction, maxDistance, layerMask);
-#endif
         }
         
         public static bool Raycast(Vector3 origin, Vector3 direction, float maxDistance, int layerMask, QueryTriggerInteraction queryTriggerInteraction)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(origin, direction, maxDistance, layerMask, queryTriggerInteraction);
+            }
+
             var raycastHits = Physics.RaycastAll(origin, direction, maxDistance, layerMask, queryTriggerInteraction);
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -552,14 +583,15 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             return raycastHits != null && raycastHits.Length > 0;
-#else
-            return Physics.Raycast(origin, direction, maxDistance, layerMask, queryTriggerInteraction);
-#endif
         }
         
         public static bool Raycast(Vector3 origin, Vector3 direction, out RaycastHit raycastHitInfo)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(origin, direction, out raycastHitInfo);
+            }
+
             var result = Physics.Raycast(origin, direction, out raycastHitInfo);
             var dc = RenderRay(origin, direction).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -568,14 +600,15 @@ namespace ArcaneOnyx.MeshGizmos
             MGizmos.AddMeshDrawCall(dc);
             
             return result;
-#else
-            return Physics.Raycast(origin, direction, out raycastHitInfo);
-#endif
         }
         
         public static bool Raycast(Vector3 origin, Vector3 direction, out RaycastHit raycastHitInfo, float maxDistance)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance);
+            }
+
             var result = Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance);
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -584,14 +617,15 @@ namespace ArcaneOnyx.MeshGizmos
             MGizmos.AddMeshDrawCall(dc);
             
             return result;
-#else
-            return Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance);
-#endif
         }
         
         public static bool Raycast(Vector3 origin, Vector3 direction, out RaycastHit raycastHitInfo, float maxDistance, int layerMask)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance, layerMask);
+            }
+
             var result = Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance, layerMask);
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -600,14 +634,15 @@ namespace ArcaneOnyx.MeshGizmos
             MGizmos.AddMeshDrawCall(dc);
             
             return result;
-#else
-            return Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance, layerMask);
-#endif
         }
         
         public static bool Raycast(Vector3 origin, Vector3 direction, out RaycastHit raycastHitInfo, float maxDistance, int layerMask, QueryTriggerInteraction queryTriggerInteraction)
         {
-#if UNITY_EDITOR
+            if (!MGizmos.IsEnable)
+            {
+                return Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance, layerMask, queryTriggerInteraction); 
+            }
+
             var result = Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance, layerMask, queryTriggerInteraction);
             var dc = RenderRay(origin, direction, maxDistance).SetDuration(Duration);
             MGizmos.AddMeshDrawCall(dc);
@@ -616,13 +651,15 @@ namespace ArcaneOnyx.MeshGizmos
             MGizmos.AddMeshDrawCall(dc);
             
             return result;
-#else
-            return Physics.Raycast(origin, direction, out raycastHitInfo, maxDistance, layerMask, queryTriggerInteraction);
-#endif
         }
 
         public static MGizmoBaseDrawCall RenderRigidBody(Rigidbody rb, float velocityScaler)
         {
+            if (!MGizmos.IsEnable)
+            {
+                return new MGizmoDrawCall();
+            }
+
             Vector3 rbVelocity = Vector3.zero;
             
             #if UNITY_6000_0_OR_NEWER
@@ -641,11 +678,14 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderCollision(Collision c)
         {
+            if (!MGizmos.IsEnable) return new MGizmoDrawCall();
             return RenderContactPoints(c.contacts);
         }
 
-        public static MGizmoCompositeDrawCall RenderContactPoints(ContactPoint[] contactPoints)
+        public static MGizmoBaseDrawCall RenderContactPoints(ContactPoint[] contactPoints)
         {
+            if (!MGizmos.IsEnable) return new MGizmoDrawCall();
+            
             MGizmoCompositeDrawCall compositeDrawCall = new();
             
             foreach (var contactPoint in contactPoints)
@@ -659,6 +699,8 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderContactPoint(ContactPoint p)
         {
+            if (!MGizmos.IsEnable) return new MGizmoDrawCall();
+            
             MGizmoCompositeDrawCall compositeDrawCall = new();
             
             var contactPointMaterial = MGizmos.Config.DefaultMaterial;
@@ -689,6 +731,8 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderRay(Ray ray, float maxDistance = FakeInfinity)
         {
+            if (!MGizmos.IsEnable) return new MGizmoDrawCall();
+            
             Vector3 rayEndPosition = ray.origin + (ray.direction * maxDistance);
             
             var dc = MGizmos.RenderArrow(ray.origin, rayEndPosition, RaycastStemWidth, RaycastArrowHeadSize);
@@ -700,6 +744,8 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderRaycastHit(RaycastHit hit)
         {
+            if (!MGizmos.IsEnable) return new MGizmoDrawCall();
+            
             MGizmoCompositeDrawCall compositeDrawCall = new();
             
             var hitMaterial = ParticlesStandardUnlitMaterial;

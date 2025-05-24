@@ -1,7 +1,7 @@
 # Unity-DebugMeshRenderer
 Visual debugging render api for Unity
 
-..* Render Anywhere you want in your code
+### Render Anywhere you want in your code
 
 ```csharp
 private void Update()
@@ -10,7 +10,7 @@ private void Update()
 }
 ```
 
-..* Show Render for an Specific Amount of Time, no need to render each frame
+### Show Render for an Specific Amount of Time, no need to render each frame
 
 ```csharp
 private void ShootWeapon()
@@ -21,7 +21,7 @@ private void ShootWeapon()
 }
 ```
 
-⋅⋅* Easy to customize
+### Easy to customize
 
 ```csharp
 var dc = MGizmos.RenderArrow(ray.origin, rayEndPosition, RaycastStemWidth, RaycastArrowHeadSize);
@@ -30,7 +30,7 @@ dc.SetColor(myColor);
 dc.MaterialPropertyBlock.SetTexture("customTexture", texture);
 ```
 
-..* Build in API to Debug Raycast
+### Build in API to Debug Raycast
 
 ```csharp
 Ray ray = new Ray(fromRaycast.position, (toRaycast.position - fromRaycast.position).normalized);

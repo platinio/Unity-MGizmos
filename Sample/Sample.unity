@@ -189,7 +189,7 @@ Transform:
   m_GameObject: {fileID: 129755995}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.08, y: -0.933, z: -0.14}
+  m_LocalPosition: {x: -1.08, y: -0.994, z: -0.14}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1556,7 +1556,7 @@ GameObject:
   - component: {fileID: 973515192}
   - component: {fileID: 973515191}
   - component: {fileID: 973515190}
-  - component: {fileID: 973515194}
+  - component: {fileID: 973515193}
   m_Layer: 0
   m_Name: Camera
   m_TagString: Untagged
@@ -1631,14 +1631,14 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 973515188}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.32547712, y: -0.2352966, z: 0.083969034, w: 0.91194814}
-  m_LocalPosition: {x: -0.58692646, y: 11.159299, z: -14.702135}
+  m_LocalRotation: {x: 0.0031896727, y: -0.0059013893, z: -0.000006285889, w: -0.9999775}
+  m_LocalPosition: {x: -4.7680535, y: -1.932523, z: 0.98018265}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &973515194
+--- !u!114 &973515193
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1647,7 +1647,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 973515188}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d8f17a8c2ac2425409d2b38b22e7fb89, type: 3}
+  m_Script: {fileID: 11500000, guid: cb14d46b37c48ed42b33055ac4ec5765, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1168082580

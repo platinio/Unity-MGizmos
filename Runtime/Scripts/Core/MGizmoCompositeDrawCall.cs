@@ -103,7 +103,14 @@ namespace ArcaneOnyx.MeshGizmos
 
         public override MGizmoBaseDrawCall Clone()
         {
-            return new MGizmoCompositeDrawCall(drawCalls.ToList());
+            List<MGizmoBaseDrawCall> dcs = new List<MGizmoBaseDrawCall>(drawCalls.Count);
+
+            foreach (var dc in drawCalls)
+            {
+                dcs.Add(dc.Clone());
+            }
+            
+            return new MGizmoCompositeDrawCall(dcs);
         }
     }
 }

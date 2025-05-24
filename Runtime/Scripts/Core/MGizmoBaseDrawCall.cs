@@ -6,6 +6,8 @@ namespace ArcaneOnyx.MeshGizmos
     public abstract class MGizmoBaseDrawCall
     {
         public abstract float RemainingTime { get; }
+        public bool KeepOneFrame { get; set; }
+        public bool AddThisFrame { get; set; }
 
         public abstract MaterialPropertyBlock MaterialPropertyBlock { get; }
 

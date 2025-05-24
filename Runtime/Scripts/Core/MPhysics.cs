@@ -61,6 +61,8 @@ namespace ArcaneOnyx.MeshGizmos
 
         private static Material GetMaterial(string shaderPath)
         {
+            if (MGizmos.Config == null) return null;
+            
             var shader = Shader.Find(shaderPath);
             if (shader == null)
             {
@@ -713,6 +715,7 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmoBaseDrawCall RenderContactPoint(ContactPoint p)
         {
             if (!MGizmos.IsEnable) return new MGizmoDrawCall();
+            if (MGizmos.Config == null) return new MGizmoDrawCall();
             
             MGizmoCompositeDrawCall compositeDrawCall = new();
             

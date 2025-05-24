@@ -89,13 +89,20 @@ namespace ArcaneOnyx.MeshGizmos
 #if UNITY_EDITOR
         private static void DuringSceneGui(SceneView sceneView)
         {
-            if (sceneGuiLastTime == 0)
+            int controlID = GUIUtility.GetControlID(FocusType.Passive);
+            
+            switch (Event.current.GetTypeForControl(controlID))
             {
-                sceneGuiLastTime = GetTimeSinceStartup();
-            }
+                case EventType.Repaint:
+                    if (sceneGuiLastTime == 0)
+                    {
+                        sceneGuiLastTime = GetTimeSinceStartup();
+                    }
 
-            HandleCameraDrawCalls(sceneView.camera, GetTimeSinceStartup() - sceneGuiLastTime);
-            sceneGuiLastTime = GetTimeSinceStartup();
+                    HandleCameraDrawCalls(sceneView.camera, GetTimeSinceStartup() - sceneGuiLastTime);
+                    sceneGuiLastTime = GetTimeSinceStartup();
+                    break;
+            }
         }
 #endif
 
@@ -120,9 +127,21 @@ namespace ArcaneOnyx.MeshGizmos
             
             for (int i = drawCalls.Count - 1; i >= 0; i--)
             {
+                var dc = drawCalls[i];
+                if (!dc.AddThisFrame && dc.KeepOneFrame)
+                {
+                    drawCalls.RemoveAt(i);
+                    continue;
+                }
+
+                dc.AddThisFrame = false;
+            }
+            
+            for (int i = drawCalls.Count - 1; i >= 0; i--)
+            {
                 drawCalls[i].Draw(camera, deltaTime);
                 
-                if (drawCalls[i].RemainingTime <= 0)
+                if (!drawCalls[i].KeepOneFrame && drawCalls[i].RemainingTime <= 0)
                 {
                     drawCalls.RemoveAt(i);
                 }
@@ -138,6 +157,10 @@ namespace ArcaneOnyx.MeshGizmos
         #region Render
         private static void InitializeMeshDrawCall(MGizmoBaseDrawCall drawCall)
         {
+            if (Config == null) return;
+
+            drawCall.KeepOneFrame = drawCall.RemainingTime <= 0;
+            drawCall.AddThisFrame = true;
             drawCall.SetColor(Config.DefaultColor)
                 .SetMaterial(Config.DefaultMaterial);
         }
@@ -145,6 +168,7 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmoBaseDrawCall RenderSphere(Vector3 position, float radius)
         {
             if (!IsEnable) return new MGizmoDrawCall();
+            if (Config == null) return new MGizmoDrawCall();
             
             MGizmoDrawCall dc = new MGizmoDrawCall(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
             InitializeMeshDrawCall(dc);
@@ -160,6 +184,7 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmoBaseDrawCall RenderCylinder(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             if (!IsEnable) return new MGizmoDrawCall();
+            if (Config == null) return new MGizmoDrawCall();
             
             MGizmoDrawCall dc = new MGizmoDrawCall(Config.CylinderMesh, position, rotation, scale);
             InitializeMeshDrawCall(dc);
@@ -206,6 +231,7 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmoBaseDrawCall RenderQuad(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             if (!IsEnable) return new MGizmoDrawCall();
+            if (Config == null) return new MGizmoDrawCall();
             
             MGizmoDrawCall dc = new MGizmoDrawCall(Config.QuadMesh, position, rotation, scale);
             InitializeMeshDrawCall(dc);
@@ -281,6 +307,7 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmoBaseDrawCall RenderArrow(Vector3 from, Vector3 to, float stemWidth = 0.025f, float arrowHeadSize = 0.1f)
         {
             if (!IsEnable) return new MGizmoDrawCall();
+            if (Config == null) return new MGizmoDrawCall();
             
             var compositeMeshDrawCall = new MGizmoCompositeDrawCall();
             

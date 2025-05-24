@@ -39,7 +39,7 @@ MPhysics.Raycast(ray);
 
 ![alt text](https://github.com/platinio/Unity-MGizmos/blob/main/ReadmeResources/raycastExample.png?raw=true)
 
-..* Render using game cameras and in builds too if you want
+#### Render using game cameras and in builds too if you want
 
 ![alt text](https://github.com/platinio/Unity-MGizmos/blob/main/ReadmeResources/cameraRendering.png?raw=true)
 

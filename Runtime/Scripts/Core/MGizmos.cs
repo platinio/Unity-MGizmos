@@ -41,8 +41,8 @@ namespace ArcaneOnyx.MeshGizmos
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             
             //listen this for scene view render
-            SceneView.duringSceneGui -= DuringSceneGui;
-            SceneView.duringSceneGui += DuringSceneGui;
+            SceneView.beforeSceneGui -= DuringSceneGui;
+            SceneView.beforeSceneGui += DuringSceneGui;
 #endif
         }
 
@@ -57,7 +57,7 @@ namespace ArcaneOnyx.MeshGizmos
 #if UNITY_EDITOR
                 EditorSceneManager.sceneOpened -= OnSceneOpened;
                 EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-                SceneView.duringSceneGui -= DuringSceneGui;
+                SceneView.beforeSceneGui -= DuringSceneGui;
 #endif
             }
         }

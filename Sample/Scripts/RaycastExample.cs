@@ -15,6 +15,4 @@ namespace ArcaneOnyx.MeshGizmos
             MPhysics.Raycast(ray);
         }
     }
-
 }
-

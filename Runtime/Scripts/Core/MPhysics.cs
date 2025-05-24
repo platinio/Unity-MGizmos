@@ -39,7 +39,7 @@ namespace ArcaneOnyx.MeshGizmos
             {
                 if (particlesStandardUnlit == null)
                 {
-                    particlesStandardUnlit = new Material(Shader.Find("Particles/Standard Unlit"));
+                    particlesStandardUnlit = GetMaterial("Particles/Standard Unlit");
                 }
 
                 return particlesStandardUnlit;
@@ -52,12 +52,25 @@ namespace ArcaneOnyx.MeshGizmos
             {
                 if (guiText == null)
                 {
-                    guiText = new Material(Shader.Find("GUI/Text Shader"));
+                    guiText = GetMaterial("GUI/Text Shader");
                 }
 
                 return guiText;
             }
-        }        
+        }
+
+        private static Material GetMaterial(string shaderPath)
+        {
+            var shader = Shader.Find(shaderPath);
+            if (shader == null)
+            {
+                Debug.LogError($"Could find shader {shaderPath} using default material instead");
+                return MGizmos.Config.DefaultMaterial;
+            }
+
+            return new Material(shader);
+        }
+
         #endregion
         
         public static int RaycastNonAlloc(Ray ray, RaycastHit[] results)

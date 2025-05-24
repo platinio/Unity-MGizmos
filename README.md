@@ -1,7 +1,7 @@
 # Unity-DebugMeshRenderer
-Visual debugging render api for Unity
+Debugging render API for Unity.
 
-### Render Anywhere you want in your code
+#### Render anywhere you want in your code
 
 ```csharp
 private void Update()
@@ -10,18 +10,18 @@ private void Update()
 }
 ```
 
-### Show Render for an Specific Amount of Time, no need to render each frame
+#### Show render for a specific amount of time, there is no need to render each frame
 
 ```csharp
 private void ShootWeapon()
 {
-  //shoot a line to the target for 1 second
+  //Render a line to the target for 1 second
   MGizmos.RenderLine(shootPoint.position, target.position).SetDuration(1.0f);
   //shoot logic
 }
 ```
 
-### Easy to customize
+#### Easy to customize
 
 ```csharp
 var dc = MGizmos.RenderArrow(ray.origin, rayEndPosition, RaycastStemWidth, RaycastArrowHeadSize);
@@ -30,7 +30,7 @@ dc.SetColor(myColor);
 dc.MaterialPropertyBlock.SetTexture("customTexture", texture);
 ```
 
-### Build in API to Debug Raycast
+#### Build in API to debug raycast operations
 
 ```csharp
 Ray ray = new Ray(fromRaycast.position, (toRaycast.position - fromRaycast.position).normalized);
@@ -39,7 +39,7 @@ MPhysics.Raycast(ray);
 
 ![alt text](https://github.com/platinio/Unity-MGizmos/blob/main/ReadmeResources/raycastExample.png?raw=true)
 
-..* Render using Game Cameras and Possible to Render in Build too
+..* Render using game cameras and in builds too if you want
 
 ![alt text](https://github.com/platinio/Unity-MGizmos/blob/main/ReadmeResources/cameraRendering.png?raw=true)
 
@@ -109,6 +109,6 @@ MGizmos.RenderMesh(mesh, position, rotation, scale);
 ```
 ![alt text](https://github.com/platinio/Unity-MGizmos/blob/main/ReadmeResources/meshExample.png?raw=true)
 
-#Enable MGizmos in Builds
+# Enable MGizmos in Builds
 
-Add a new Scripting Define Symbol 
+Add a new [Scripting Define Symbol](https://docs.unity3d.com/6000.1/Documentation/Manual/custom-scripting-symbols.html) **SHOW_MESH_GIZMOS_IN_BUILD** 

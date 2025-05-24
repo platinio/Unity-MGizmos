@@ -278,7 +278,7 @@ namespace ArcaneOnyx.MeshGizmos
             return dc;
         }
         
-        public static MGizmoBaseDrawCall RenderArrow(Vector3 from, Vector3 to, float stemWidth = 0.01f, float arrowHeadSize = 0.5f)
+        public static MGizmoBaseDrawCall RenderArrow(Vector3 from, Vector3 to, float stemWidth = 0.025f, float arrowHeadSize = 0.1f)
         {
             if (!IsEnable) return new MGizmoDrawCall();
             

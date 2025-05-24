@@ -21,7 +21,7 @@ private void ShootWeapon()
 }
 ```
 
-..* Easy to customize
+⋅⋅* Easy to customize
 
 ```csharp
 var dc = MGizmos.RenderArrow(ray.origin, rayEndPosition, RaycastStemWidth, RaycastArrowHeadSize);

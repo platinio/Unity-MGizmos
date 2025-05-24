@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using UnityEditor;
+using UnityEditor.SceneManagement;
 #endif
 
 using System.Collections.Generic;
@@ -29,10 +30,13 @@ namespace ArcaneOnyx.MeshGizmos
 
         static MGizmos()
         {
-            SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
-            SceneManager.sceneLoaded += SceneManagerOnsceneLoaded;
+            SceneManager.sceneUnloaded -= SceneManagerOnsceneLoaded;
+            SceneManager.sceneUnloaded += SceneManagerOnsceneLoaded;
 
 #if UNITY_EDITOR
+            EditorSceneManager.sceneOpened += OnSceneOpened;
+            EditorSceneManager.sceneOpened -= OnSceneOpened;
+            
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             
@@ -41,16 +45,17 @@ namespace ArcaneOnyx.MeshGizmos
             SceneView.duringSceneGui += DuringSceneGui;
 #endif
         }
-        
+
         //https://stackoverflow.com/questions/256077/static-finalizer/256278#256278
         private static readonly Destructor Finalise = new Destructor();
         private sealed class Destructor
         {
             ~Destructor()
             {
-                SceneManager.sceneLoaded -= SceneManagerOnsceneLoaded;
+                SceneManager.sceneUnloaded -= SceneManagerOnsceneLoaded;
                 
 #if UNITY_EDITOR
+                EditorSceneManager.sceneOpened -= OnSceneOpened;
                 EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
                 SceneView.duringSceneGui -= DuringSceneGui;
 #endif
@@ -62,9 +67,14 @@ namespace ArcaneOnyx.MeshGizmos
         {
             Reset();
         }
+        
+        private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
+        {
+            Reset();
+        }
 #endif
-
-        private static void SceneManagerOnsceneLoaded(Scene scene, LoadSceneMode loadSceneMode)
+        
+        private static void SceneManagerOnsceneLoaded(Scene current)
         {
             Reset();
         }

@@ -34,15 +34,15 @@ namespace ArcaneOnyx.MeshGizmos
             SceneManager.sceneUnloaded += SceneManagerOnsceneLoaded;
 
 #if UNITY_EDITOR
-            EditorSceneManager.sceneOpened += OnSceneOpened;
             EditorSceneManager.sceneOpened -= OnSceneOpened;
+            EditorSceneManager.sceneOpened += OnSceneOpened;
             
             EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
             EditorApplication.playModeStateChanged += OnPlayModeStateChanged;
             
             //listen this for scene view render
-            SceneView.beforeSceneGui -= DuringSceneGui;
-            SceneView.beforeSceneGui += DuringSceneGui;
+            SceneView.beforeSceneGui -= BeforeSceneGui;
+            SceneView.beforeSceneGui += BeforeSceneGui;
 #endif
         }
 
@@ -57,7 +57,7 @@ namespace ArcaneOnyx.MeshGizmos
 #if UNITY_EDITOR
                 EditorSceneManager.sceneOpened -= OnSceneOpened;
                 EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
-                SceneView.beforeSceneGui -= DuringSceneGui;
+                SceneView.beforeSceneGui -= BeforeSceneGui;
 #endif
             }
         }
@@ -97,18 +97,18 @@ namespace ArcaneOnyx.MeshGizmos
         }
         
 #if UNITY_EDITOR
-        private static void DuringSceneGui(SceneView sceneView)
+        private static void BeforeSceneGui(SceneView sceneView)
         {
+            if (sceneGuiLastTime == 0)
+            {
+                sceneGuiLastTime = GetTimeSinceStartup();
+            }
+            
             int controlID = GUIUtility.GetControlID(FocusType.Passive);
             
             switch (Event.current.GetTypeForControl(controlID))
             {
                 case EventType.Repaint:
-                    if (sceneGuiLastTime == 0)
-                    {
-                        sceneGuiLastTime = GetTimeSinceStartup();
-                    }
-
                     HandleCameraDrawCalls(sceneView.camera, GetTimeSinceStartup() - sceneGuiLastTime);
                     sceneGuiLastTime = GetTimeSinceStartup();
                     break;

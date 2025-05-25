@@ -1,4 +1,4 @@
-# Unity-DebugMeshRenderer
+# Unity-MGizmos
 Debugging render API for Unity.
 
 #### Render anywhere you want in your code

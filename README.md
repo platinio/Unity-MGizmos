@@ -45,7 +45,7 @@ MPhysics.Raycast(ray);
 
 # How to Install?
 
-Import [This](https://github.com/platinio/Unity-ScriptableObjectDatabase/releases/download/1.1/SOD_1.1.unitypackage) Unity package into your project.
+Import [This](https://github.com/platinio/Unity-MGizmos/releases/download/1.0/MGizmos.1.0.unitypackage) Unity package into your project.
 
 # Getting Started
 

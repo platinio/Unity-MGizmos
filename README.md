@@ -112,3 +112,7 @@ MGizmos.RenderMesh(mesh, position, rotation, scale);
 # Enable MGizmos in Builds
 
 Add a new [Scripting Define Symbol](https://docs.unity3d.com/6000.1/Documentation/Manual/custom-scripting-symbols.html) **SHOW_MESH_GIZMOS_IN_BUILD** 
+
+# How to Enable MGizmos in Game View
+
+Add component `MGizmoCamera` to your camera, there is also a `MGizmoCameraExecuteAlways` component which will try to also render while the game is not playing.

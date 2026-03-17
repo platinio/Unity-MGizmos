@@ -2007,7 +2007,7 @@ MonoBehaviour:
   from: {fileID: 1339471126}
   to: {fileID: 1312583572}
   arrowHeadSize: 0.08
-  material: {fileID: 2100000, guid: 90cf5c97c252e224c99816845e49c7be, type: 2}
+  material: {fileID: 2100000, guid: 52d843e09f787ba4285b05c777c446d8, type: 2}
 --- !u!4 &1428205109
 Transform:
   m_ObjectHideFlags: 0
@@ -2227,10 +2227,10 @@ Rigidbody:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1750548665}
-  serializedVersion: 4
+  serializedVersion: 5
   m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
+  m_LinearDamping: 0
+  m_AngularDamping: 0.05
   m_CenterOfMass: {x: 0, y: 0, z: 0}
   m_InertiaTensor: {x: 1, y: 1, z: 1}
   m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}

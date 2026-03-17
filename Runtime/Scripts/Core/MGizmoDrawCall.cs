@@ -15,7 +15,9 @@ namespace ArcaneOnyx.MeshGizmos
         private ShadowCastingMode shadowCastingMode;
         private bool receiveShadows;
         
+        
         private static readonly int ColorPropertyId = Shader.PropertyToID("_Color");
+        private static readonly int BaseColorPropertyId = Shader.PropertyToID("_BaseColor");
 
         public override float RemainingTime => duration;
         public Material Material => material;
@@ -50,6 +52,7 @@ namespace ArcaneOnyx.MeshGizmos
         {
             if (!MGizmos.IsEnable) return this;
             materialPropertyBlock.SetColor(ColorPropertyId, color);
+            materialPropertyBlock.SetColor(BaseColorPropertyId, color);
             return this;
         }
 

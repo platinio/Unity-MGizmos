@@ -15,6 +15,7 @@ namespace ArcaneOnyx.MeshGizmos
             
             var dc = MGizmos.RenderArrow(from.position, to.position, 0.05f, arrowHeadSize);
             dc.SetMaterial(material);
+            dc.SetColor(Color.yellow);
             MGizmos.AddMeshDrawCall(dc);
         }
     }

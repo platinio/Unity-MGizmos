@@ -24,9 +24,9 @@ namespace ArcaneOnyx.MeshGizmos
             {
                 #if UNITY_EDITOR || SHOW_MESH_GIZMOS_IN_BUILD
                 return true;
-                #endif
-
+                #else
                 return false;
+                #endif
             }
         }
 
@@ -122,8 +122,9 @@ namespace ArcaneOnyx.MeshGizmos
         {
 #if UNITY_EDITOR
             return (float) EditorApplication.timeSinceStartup;
-#endif
+#else
             return Time.time;
+#endif
         }
 
         public static void HandleCameraDrawCalls(Camera camera, float deltaTime)

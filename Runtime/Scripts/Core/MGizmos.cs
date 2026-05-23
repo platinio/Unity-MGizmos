@@ -14,7 +14,9 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmosRendererConfig Config => MGizmosRendererConfig.Instance;
         private static Dictionary<Camera, List<MGizmoBaseDrawCall>> meshDrawCalls = new();
         
+#if UNITY_EDITOR
         private static float sceneGuiLastTime = 0;
+#endif
 
         public static bool IsEnable
         {

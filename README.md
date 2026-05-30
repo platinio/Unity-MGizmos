@@ -1,5 +1,10 @@
 # Unity-MGizmos
-Debugging render API for Unity.
+A runtime debug rendering API for drawing shapes, lines, arrows, and physics visualizations directly in the game view.
+
+# Overview
+Unity's built-in Gizmos only work in the Scene view and must be redrawn every frame. MGizmos solves both problems. You call a static method from anywhere in your code, optionally set a duration, and the shape renders in the game view for as long as you need without any per-frame calls.
+
+It is useful any time you want to visualize positions, directions, rays, collisions, or velocities while the game is running — without opening the Scene view or attaching components to objects.
 
 #### Render anywhere you want in your code
 

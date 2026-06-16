@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     public class BouncePlatform : MonoBehaviour
     {

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-namespace ArcaneOnyx
+namespace ArcaneOnyx.MeshGizmos
 {
     public class ScriptableSingleton<T> : ScriptableObject where T : ScriptableSingleton<T>
     {

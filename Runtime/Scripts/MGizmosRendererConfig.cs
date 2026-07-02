@@ -18,6 +18,11 @@ namespace ArcaneOnyx.MeshGizmos
         [SerializeField] private Mesh quadMesh;
         [SerializeField] private Mesh arrowHead;
 
+        [Header("Text")]
+        [SerializeField, Tooltip("Font used by MGizmos.RenderText. Leave empty to fall back to a runtime " +
+            "dynamic Arial. A dynamic (not static) font is required.")]
+        private Font textFont;
+
         public Material DefaultMaterial => defaultMaterial;
         public Color DefaultColor => defaultColor;
         
@@ -28,5 +33,6 @@ namespace ArcaneOnyx.MeshGizmos
         public Mesh PlaneMesh => planeMesh;
         public Mesh QuadMesh => quadMesh;
         public Mesh ArrowHead => arrowHead;
+        public Font TextFont => textFont;
     }
 }

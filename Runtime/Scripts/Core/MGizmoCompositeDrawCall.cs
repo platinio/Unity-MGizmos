@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -8,6 +7,11 @@ namespace ArcaneOnyx.MeshGizmos
     public class MGizmoCompositeDrawCall : MGizmoBaseDrawCall
     {
         private List<MGizmoBaseDrawCall> drawCalls = new();
+
+        //recycles the per-camera clones MGizmos creates and destroys - see Clone/Release. Only instances
+        //created by Clone are ever pooled, so a pooled composite always owns its list
+        private static readonly Stack<MGizmoCompositeDrawCall> pool = new();
+        private const int MaxPoolSize = 256;
         
         public override float RemainingTime 
         {
@@ -93,9 +97,10 @@ namespace ArcaneOnyx.MeshGizmos
             for (int i = drawCalls.Count - 1; i >= 0; i--)
             {
                 drawCalls[i].Draw(camera, deltaTime);
-                
+
                 if (drawCalls[i].RemainingTime < 0)
                 {
+                    drawCalls[i].Release();
                     drawCalls.RemoveAt(i);
                 }
             }
@@ -103,14 +108,35 @@ namespace ArcaneOnyx.MeshGizmos
 
         public override MGizmoBaseDrawCall Clone()
         {
-            List<MGizmoBaseDrawCall> dcs = new List<MGizmoBaseDrawCall>(drawCalls.Count);
+            var composite = pool.Count > 0 ? pool.Pop() : new MGizmoCompositeDrawCall();
+            composite.pooled = false;
+            composite.KeepOneFrame = false;
+            composite.AddThisFrame = false;
 
             foreach (var dc in drawCalls)
             {
-                dcs.Add(dc.Clone());
+                composite.drawCalls.Add(dc.Clone());
             }
-            
-            return new MGizmoCompositeDrawCall(dcs);
+
+            return composite;
+        }
+
+        internal override void Release()
+        {
+            if (pooled) return;
+
+            foreach (var dc in drawCalls)
+            {
+                dc.Release();
+            }
+
+            drawCalls.Clear();
+
+            //only pool exact instances so a user subclass never lands in this pool
+            if (GetType() != typeof(MGizmoCompositeDrawCall) || pool.Count >= MaxPoolSize) return;
+
+            pooled = true;
+            pool.Push(this);
         }
     }
 }

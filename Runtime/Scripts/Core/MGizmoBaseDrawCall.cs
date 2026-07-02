@@ -18,5 +18,12 @@ namespace ArcaneOnyx.MeshGizmos
         public abstract MGizmoBaseDrawCall SetReceiveShadows(bool value);
         public abstract void Draw(Camera camera, float deltaTime);
         public abstract MGizmoBaseDrawCall Clone();
+
+        //guards pooled instances against being released twice; managed by the Release overrides
+        protected bool pooled;
+
+        //called by MGizmos when it discards a clone it created, so implementations can recycle
+        //themselves; the originals returned by the MGizmos.Render* API are caller-owned and never released
+        internal virtual void Release() { }
     }
 }

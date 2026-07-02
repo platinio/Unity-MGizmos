@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace ArcaneOnyx.MeshGizmos
 {
@@ -672,7 +672,7 @@ namespace ArcaneOnyx.MeshGizmos
         {
             if (!MGizmos.IsEnable)
             {
-                return new MGizmoDrawCall();
+                return MGizmos.InertDrawCall;
             }
 
             Vector3 rbVelocity = Vector3.zero;
@@ -693,13 +693,13 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderCollision(Collision c)
         {
-            if (!MGizmos.IsEnable) return new MGizmoDrawCall();
+            if (!MGizmos.IsEnable) return MGizmos.InertDrawCall;
             return RenderContactPoints(c.contacts);
         }
 
         public static MGizmoBaseDrawCall RenderContactPoints(ContactPoint[] contactPoints)
         {
-            if (!MGizmos.IsEnable) return new MGizmoDrawCall();
+            if (!MGizmos.IsEnable) return MGizmos.InertDrawCall;
             
             MGizmoCompositeDrawCall compositeDrawCall = new();
             
@@ -714,8 +714,8 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderContactPoint(ContactPoint p)
         {
-            if (!MGizmos.IsEnable) return new MGizmoDrawCall();
-            if (MGizmos.Config == null) return new MGizmoDrawCall();
+            if (!MGizmos.IsEnable) return MGizmos.InertDrawCall;
+            if (MGizmos.Config == null) return MGizmos.InertDrawCall;
             
             MGizmoCompositeDrawCall compositeDrawCall = new();
             
@@ -747,7 +747,7 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderRay(Ray ray, float maxDistance = FakeInfinity)
         {
-            if (!MGizmos.IsEnable) return new MGizmoDrawCall();
+            if (!MGizmos.IsEnable) return MGizmos.InertDrawCall;
             
             Vector3 rayEndPosition = ray.origin + (ray.direction * maxDistance);
             
@@ -760,7 +760,7 @@ namespace ArcaneOnyx.MeshGizmos
 
         public static MGizmoBaseDrawCall RenderRaycastHit(RaycastHit hit)
         {
-            if (!MGizmos.IsEnable) return new MGizmoDrawCall();
+            if (!MGizmos.IsEnable) return MGizmos.InertDrawCall;
             
             MGizmoCompositeDrawCall compositeDrawCall = new();
             

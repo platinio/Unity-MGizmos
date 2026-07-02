@@ -114,6 +114,21 @@ MGizmos.RenderMesh(mesh, position, rotation, scale);
 ```
 ![alt text](https://github.com/platinio/Unity-MGizmos/blob/main/ReadmeResources/meshExample.png?raw=true)
 
+# Performance and GPU Instancing
+
+Draw calls that share a mesh and a material with **Enable GPU Instancing** turned on are batched into a
+handful of `Graphics.DrawMeshInstanced` calls per frame, so drawing hundreds of spheres or lines stays
+cheap. The bundled `DefaultMaterial` (shader `ArcaneOnyx/MGizmos/Instanced Unlit`) is set up this way out
+of the box, including per-gizmo colors via `SetColor`.
+
+If you pass your own material with `SetMaterial`:
+
+- **Instancing disabled** — the gizmo renders through the classic `Graphics.DrawMesh` path, one draw call
+  per gizmo, and `MaterialPropertyBlock` customizations apply as usual.
+- **Instancing enabled** — the gizmo joins an instanced batch. Per-gizmo colors then require the shader to
+  declare `_Color` as an instanced property (see `MGizmosInstancedUnlit.shader`); shaders without it render
+  every instance with the material's own color, and per-draw-call `MaterialPropertyBlock` values are ignored.
+
 # Enable MGizmos in Builds
 
 Add a new [Scripting Define Symbol](https://docs.unity3d.com/6000.1/Documentation/Manual/custom-scripting-symbols.html) **SHOW_MESH_GIZMOS_IN_BUILD** 

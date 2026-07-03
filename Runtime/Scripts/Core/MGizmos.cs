@@ -51,6 +51,13 @@ namespace ArcaneOnyx.MeshGizmos
             //listen this for scene view render
             SceneView.beforeSceneGui -= BeforeSceneGui;
             SceneView.beforeSceneGui += BeforeSceneGui;
+
+            //keeps game-view gizmos alive while the editor is paused
+            EditorApplication.update -= OnEditorUpdate;
+            EditorApplication.update += OnEditorUpdate;
+
+            EditorApplication.pauseStateChanged -= OnPauseStateChanged;
+            EditorApplication.pauseStateChanged += OnPauseStateChanged;
 #endif
         }
 
@@ -66,6 +73,8 @@ namespace ArcaneOnyx.MeshGizmos
                 EditorSceneManager.sceneOpened -= OnSceneOpened;
                 EditorApplication.playModeStateChanged -= OnPlayModeStateChanged;
                 SceneView.beforeSceneGui -= BeforeSceneGui;
+                EditorApplication.update -= OnEditorUpdate;
+                EditorApplication.pauseStateChanged -= OnPauseStateChanged;
 #endif
             }
         }
@@ -75,10 +84,45 @@ namespace ArcaneOnyx.MeshGizmos
         {
             Reset();
         }
-        
+
         private static void OnSceneOpened(Scene scene, OpenSceneMode mode)
         {
             Reset();
+        }
+
+        //While the editor is paused, MGizmosCamera.Update stops running and Graphics.Draw* submissions
+        //only last one frame, so any Game view repaint during the pause (editor interactions trigger
+        //them) would render without gizmos. Re-submit the game cameras' draw calls with a zero delta -
+        //EditorApplication.update keeps ticking through a pause - so the gizmos stay visible and frozen.
+        //The scene view camera is excluded: BeforeSceneGui already feeds it while paused.
+        private static void OnEditorUpdate()
+        {
+            if (!EditorApplication.isPaused || !Application.isPlaying) return;
+
+            SubmitGameCameraDrawCalls();
+        }
+
+        //The repaint triggered by engaging pause can run in the same editor frame, before the first
+        //paused OnEditorUpdate tick - that repaint had no submissions and the gizmos blinked out for a
+        //moment (most visible with the game view maximized, where the pause interaction repaints it
+        //immediately). Submitting synchronously on the state change puts the draws in flight before that
+        //first repaint renders.
+        private static void OnPauseStateChanged(PauseState state)
+        {
+            if (state != PauseState.Paused || !Application.isPlaying) return;
+
+            SubmitGameCameraDrawCalls();
+        }
+
+        private static void SubmitGameCameraDrawCalls()
+        {
+            foreach (var pair in meshDrawCalls)
+            {
+                var camera = pair.Key;
+                if (camera == null || camera.cameraType != CameraType.Game) continue;
+
+                HandleCameraDrawCalls(camera, 0.0f);
+            }
         }
 #endif
         
@@ -130,11 +174,19 @@ namespace ArcaneOnyx.MeshGizmos
             }
             
             int controlID = GUIUtility.GetControlID(FocusType.Passive);
-            
+
             switch (Event.current.GetTypeForControl(controlID))
             {
                 case EventType.Repaint:
-                    HandleCameraDrawCalls(sceneView.camera, GetTimeSinceStartup() - sceneGuiLastTime);
+                    //while the editor is paused, gizmo lifetimes must not advance: the scene view keeps
+                    //repainting on editor time (which never pauses), so without this the durations kept
+                    //draining through a pause. Zero delta still draws everything, frozen, so the scene
+                    //can be inspected; game cameras already freeze because their Update stops running.
+                    float deltaTime = EditorApplication.isPaused && Application.isPlaying
+                        ? 0.0f
+                        : GetTimeSinceStartup() - sceneGuiLastTime;
+
+                    HandleCameraDrawCalls(sceneView.camera, deltaTime);
                     sceneGuiLastTime = GetTimeSinceStartup();
                     break;
             }

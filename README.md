@@ -4,7 +4,7 @@ A runtime debug rendering API for drawing shapes, lines, arrows, and physics vis
 # Overview
 Unity's built-in Gizmos only work in the Scene view and must be redrawn every frame. MGizmos solves both problems. You call a static method from anywhere in your code, optionally set a duration, and the shape renders in the game view for as long as you need without any per-frame calls.
 
-It is useful any time you want to visualize positions, directions, rays, collisions, or velocities while the game is running — without opening the Scene view or attaching components to objects.
+It is useful any time you want to visualize positions, directions, rays, collisions, or velocities while the game is running without opening the Scene view or attaching components to objects.
 
 #### Render anywhere you want in your code
 
@@ -50,7 +50,7 @@ MPhysics.Raycast(ray);
 
 # How to Install?
 
-Import [This](https://github.com/platinio/Unity-MGizmos/releases/download/1.0/MGizmos.1.0.unitypackage) Unity package into your project.
+Import [This](https://github.com/platinio/Unity-MGizmos/releases/latest/download/MGizmos.unitypackage) Unity package into your project.
 
 # Getting Started
 

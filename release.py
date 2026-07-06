@@ -76,12 +76,17 @@ def git(repo, *args, check=True):
     return (result.stdout or "").strip()
 
 
-def token():
+def token(repo):
+    """GitHub token: env var first, then a gitignored .release_token file in the repo."""
     tok = os.environ.get("GITHUB_TOKEN") or os.environ.get("GH_TOKEN")
     if not tok:
+        f = os.path.join(repo, ".release_token")
+        if os.path.isfile(f):
+            tok = open(f).read().strip()
+    if not tok:
         fail(
-            "no GitHub token found. Set GITHUB_TOKEN (or GH_TOKEN) to a personal "
-            "access token with 'repo' + 'workflow' scope."
+            "no GitHub token found. Set GITHUB_TOKEN (or GH_TOKEN), or put the token "
+            "in a gitignored .release_token file in the repo. Needs Contents: write."
         )
     return tok
 
@@ -437,7 +442,7 @@ def main():
     install_path = args.install_path or f"Assets/{name}"
     tag = args.tag or args.version
     out_file = os.path.join(repo, "dist", f"{name}.unitypackage")
-    tok = token()
+    tok = token(repo)
     owner, gh_name = owner_repo(repo)
     info(f"repo={owner}/{gh_name}  name={name}  tag={tag}  install={install_path}")
 

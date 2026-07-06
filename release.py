@@ -154,6 +154,33 @@ def detect_tf_version(parent):
     return DEFAULT_TF_VERSION
 
 
+# Built-in engine modules to fall back on when there's no parent project to copy
+# them from (e.g. the tool repo cloned standalone in CI).
+FALLBACK_MODULES = [
+    "ai", "androidjni", "animation", "assetbundle", "audio", "cloth",
+    "director", "imageconversion", "imgui", "jsonserialize", "particlesystem",
+    "physics", "physics2d", "screencapture", "terrain", "terrainphysics",
+    "tilemap", "ui", "uielements", "umbra", "unityanalytics", "unitywebrequest",
+    "unitywebrequestassetbundle", "unitywebrequestaudio", "unitywebrequesttexture",
+    "unitywebrequestwww", "vehicles", "video", "wind", "xr",
+]
+
+
+def scaffold_deps(parent, tf_version):
+    """manifest dependencies for the throwaway project: engine modules + test framework."""
+    deps = {"com.unity.test-framework": tf_version}
+    if parent:
+        mf = os.path.join(parent, "Packages", "manifest.json")
+        if os.path.isfile(mf):
+            for k, v in json.load(open(mf)).get("dependencies", {}).items():
+                if k.startswith("com.unity.modules."):
+                    deps[k] = v
+    if not any(k.startswith("com.unity.modules.") for k in deps):
+        for m in FALLBACK_MODULES:
+            deps[f"com.unity.modules.{m}"] = "1.0.0"
+    return deps
+
+
 def find_unity(version, override):
     """Locate Unity.exe/binary for `version`. Returns path or None."""
     if override:
@@ -229,7 +256,7 @@ public static class CIBuild
 """
 
 
-def scaffold_project(repo, name, unity_version, tf_version):
+def scaffold_project(repo, name, unity_version, deps):
     """Create a temp Unity project containing the tracked tool content."""
     proj = tempfile.mkdtemp(prefix=f"ci_{name}_")
     os.makedirs(os.path.join(proj, "ProjectSettings"))
@@ -237,7 +264,7 @@ def scaffold_project(repo, name, unity_version, tf_version):
     with open(os.path.join(proj, "ProjectSettings", "ProjectVersion.txt"), "w") as fh:
         fh.write(f"m_EditorVersion: {unity_version}\n")
     with open(os.path.join(proj, "Packages", "manifest.json"), "w") as fh:
-        json.dump({"dependencies": {"com.unity.test-framework": tf_version}}, fh, indent=2)
+        json.dump({"dependencies": deps}, fh, indent=2)
 
     # copy every tracked file into Assets/<name>/, preserving structure
     dest_root = os.path.join(proj, "Assets", name)
@@ -281,9 +308,9 @@ def parse_test_results(xml_path):
     return total, passed, failed, skipped, failures
 
 
-def verify_locally(repo, name, unity_version, tf_version, unity_exe, platforms, keep):
-    info(f"scaffolding throwaway Unity {unity_version} project ...")
-    proj = scaffold_project(repo, name, unity_version, tf_version)
+def verify_locally(repo, name, unity_version, deps, unity_exe, platforms, keep):
+    info(f"scaffolding throwaway Unity {unity_version} project ({len(deps)} deps) ...")
+    proj = scaffold_project(repo, name, unity_version, deps)
     try:
         # --- tests + compile check (per platform) ---
         for platform in platforms:
@@ -427,12 +454,12 @@ def main():
     else:
         parent = find_parent_project(repo)
         unity_version = detect_unity_version(parent, args.unity_version)
-        tf_version = detect_tf_version(parent)
+        deps = scaffold_deps(parent, detect_tf_version(parent))
         unity_exe = find_unity(unity_version, args.unity)
         if not unity_exe:
             fail(f"could not find Unity {unity_version}. Pass --unity <path> or set "
                  f"UNITY_PATH, or --skip-tests to bypass.")
-        verify_locally(repo, name, unity_version, tf_version, unity_exe,
+        verify_locally(repo, name, unity_version, deps, unity_exe,
                        args.test_platforms, args.keep_test_project)
 
     # 3. pack ---------------------------------------------------------------

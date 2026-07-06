@@ -444,6 +444,10 @@ def main():
     out_file = os.path.join(repo, "dist", f"{name}.unitypackage")
     tok = token(repo)
     owner, gh_name = owner_repo(repo)
+    # Resolve the canonical owner/repo (follows GitHub repo renames) and validate
+    # the token up front, so we never push a tag and then fail on the release call.
+    gh = api("GET", f"{API}/repos/{owner}/{gh_name}", tok=tok)
+    owner, gh_name = gh["full_name"].split("/", 1)
     info(f"repo={owner}/{gh_name}  name={name}  tag={tag}  install={install_path}")
 
     # 1. guards -------------------------------------------------------------

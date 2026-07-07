@@ -6,13 +6,37 @@ Given a version and (optionally) a path to the repo, this script does the whole
 release by itself:
 
     1. Sanity-checks the working tree and that the version isn't already tagged.
-    2. Verifies the tool LOCALLY: scaffolds a throwaway Unity project, copies the
-       tool in, makes sure it compiles, runs any EditMode tests, and builds a
-       Windows player. Any failure aborts the release. (Skipped with --skip-tests.)
-    3. Builds a <name>.unitypackage in pure Python (no Unity, no license needed).
-    4. Pushes the branch, tags the release, and pushes the tag.
-    5. Creates the GitHub Release (auto-generated notes) and uploads the package.
-    6. Prints the permanent "latest download" URL for the docs.
+    2. Reads module.json (if present) and resolves the dependency closure: each
+       dependency's latest GitHub release .unitypackage is downloaded, and its
+       embedded module.json is read to discover transitive dependencies.
+    3. Verifies the tool LOCALLY: scaffolds a throwaway Unity project, copies the
+       tool in (plus the downloaded dependencies), makes sure it compiles, runs any
+       EditMode tests, and builds a Windows player. (Skipped with --skip-tests.)
+    4. Builds a <name>.unitypackage in pure Python (no Unity, no license needed),
+       merging the dependency packages in (deduplicated by GUID) so the release is
+       fully self-contained.
+    5. Pushes the branch, tags the release, and pushes the tag.
+    6. Creates the GitHub Release (auto-generated notes) and uploads the package.
+    7. Prints the permanent "latest download" URL for the docs.
+
+module.json (at the repo root, committed together with its .meta so it ships
+inside the package -- ModuleManager reads it in the buyer's project):
+
+    {
+        "name": "HermesEventGenerator",
+        "version": "1.1.0",
+        "installPath": "Assets/HermesEventGenerator",
+        "unity": "6000.1",
+        "defines": ["MODULE_HERMES_EXIST"],
+        "dependencies": {
+            "UnityExtensions": { "repo": "platinio/unity-extensions", "version": "1.0.0" }
+        }
+    }
+
+"version" must match the version being released (the script enforces this).
+Dependencies are fetched from each repo's LATEST GitHub release; the "version"
+on a dependency is the minimum the module needs (consumed by ModuleManager for
+warnings, not used to pin the download).
 
 Local verification (step 2) needs a Unity install matching the project version.
 The script auto-detects Unity from the standard Unity Hub location; override with
@@ -93,11 +117,12 @@ def token(repo):
 
 def api(method, url, data=None, tok=None, headers=None, raw=False):
     hdrs = {
-        "Authorization": f"Bearer {tok}",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
         "User-Agent": "unity-tool-release-script",
     }
+    if tok:
+        hdrs["Authorization"] = f"Bearer {tok}"
     if headers:
         hdrs.update(headers)
     body = None
@@ -121,6 +146,102 @@ def owner_repo(repo):
     if not m:
         fail(f"could not parse a github owner/repo from origin url: {url}")
     return m.group(1), m.group(2)
+
+
+# --------------------------------------------------------------------------- #
+# module.json + dependency closure
+# --------------------------------------------------------------------------- #
+def load_manifest(repo):
+    """The module's own module.json, or None if it doesn't have one."""
+    path = os.path.join(repo, "module.json")
+    if not os.path.isfile(path):
+        return None
+    manifest = json.load(open(path, encoding="utf-8-sig"))
+    if not git(repo, "ls-files", "module.json.meta"):
+        fail("module.json exists but module.json.meta is not tracked by git. The "
+             "manifest must ship inside the package (ModuleManager reads it), and "
+             "the packer only packs files whose .meta is committed.")
+    return manifest
+
+
+def download_release_package(slug, tok):
+    """Download the .unitypackage asset of `slug`'s latest GitHub release.
+
+    Returns (tag, raw_tar_bytes). The asset is matched by extension, not by
+    name, so older releases with versioned filenames still work.
+    """
+    rel = api("GET", f"{API}/repos/{slug}/releases/latest", tok=tok)
+    asset = next((a for a in rel.get("assets", [])
+                  if a["name"].endswith(".unitypackage")), None)
+    if not asset:
+        fail(f"latest release of {slug} ({rel.get('tag_name')}) has no "
+             f".unitypackage asset. Release that module first.")
+    # public asset download; deliberately unauthenticated so the S3 redirect
+    # doesn't choke on a forwarded Authorization header
+    req = urllib.request.Request(asset["browser_download_url"],
+                                 headers={"User-Agent": "unity-tool-release-script"})
+    with urllib.request.urlopen(req) as resp:
+        data = resp.read()
+    return rel["tag_name"], gzip.decompress(data)
+
+
+def package_groups(raw):
+    """Group a raw unitypackage tar's members by asset GUID."""
+    tar = tarfile.open(fileobj=io.BytesIO(raw))
+    groups = {}
+    for member in tar.getmembers():
+        name = member.name[2:] if member.name.startswith("./") else member.name
+        guid, _, part = name.partition("/")
+        if guid and part and member.isfile():
+            groups.setdefault(guid, {})[part] = member
+    return tar, groups
+
+
+def package_manifest(raw):
+    """The module's own module.json inside a package (shallowest one), or None.
+
+    A bundled package can contain the manifests of its own bundled dependencies
+    too; the module's own manifest is the one closest to its install root.
+    """
+    tar, groups = package_groups(raw)
+    best = None
+    for parts in groups.values():
+        if "pathname" not in parts or "asset" not in parts:
+            continue
+        pathname = tar.extractfile(parts["pathname"]).read().decode().splitlines()[0]
+        if os.path.basename(pathname) == "module.json":
+            if best is None or pathname.count("/") < best[0].count("/"):
+                best = (pathname, parts["asset"])
+    if best is None:
+        return None
+    return json.loads(tar.extractfile(best[1]).read().decode("utf-8-sig"))
+
+
+def resolve_dependency_closure(manifest, tok):
+    """BFS the dependency graph, downloading each dependency's latest release.
+
+    Returns a list of {name, repo, tag, raw} dicts, deduplicated by repo. Each
+    downloaded package's embedded module.json supplies its own dependencies;
+    releases that predate module.json are treated as leaves.
+    """
+    packages, visited = [], set()
+    queue = list((manifest or {}).get("dependencies", {}).items())
+    while queue:
+        name, spec = queue.pop(0)
+        slug = spec["repo"] if isinstance(spec, dict) else spec
+        if slug.lower() in visited:
+            continue
+        visited.add(slug.lower())
+        info(f"fetching dependency {name} ({slug}) ...")
+        tag, raw = download_release_package(slug, tok)
+        info(f"  got {name} {tag}")
+        sub = package_manifest(raw)
+        if sub:
+            queue.extend(sub.get("dependencies", {}).items())
+        else:
+            info(f"  ({name} release has no module.json; treating as leaf)")
+        packages.append({"name": name, "repo": slug, "tag": tag, "raw": raw})
+    return packages
 
 
 # --------------------------------------------------------------------------- #
@@ -313,9 +434,13 @@ def parse_test_results(xml_path):
     return total, passed, failed, skipped, failures
 
 
-def verify_locally(repo, name, unity_version, deps, unity_exe, platforms, keep):
+def verify_locally(repo, name, unity_version, deps, unity_exe, platforms, keep,
+                   dep_packages=()):
     info(f"scaffolding throwaway Unity {unity_version} project ({len(deps)} deps) ...")
     proj = scaffold_project(repo, name, unity_version, deps)
+    for dep in dep_packages:
+        n = extract_package_into_project(dep["raw"], proj)
+        info(f"  added dependency {dep['name']} {dep['tag']} ({n} assets)")
     try:
         # --- tests + compile check (per platform) ---
         for platform in platforms:
@@ -367,10 +492,11 @@ def verify_locally(repo, name, unity_version, deps, unity_exe, platforms, keep):
 # --------------------------------------------------------------------------- #
 # unitypackage builder
 # --------------------------------------------------------------------------- #
-def build_unitypackage(repo, install_path, out_file, exclude_prefixes):
+def build_unitypackage(repo, install_path, out_file, exclude_prefixes, dep_packages=()):
     tracked = git(repo, "ls-files").splitlines()
     metas = [f for f in tracked if f.endswith(".meta")]
     added, skipped = 0, 0
+    seen_guids = set()
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w") as tar:
         mtime = int(time.time())
@@ -404,11 +530,54 @@ def build_unitypackage(repo, install_path, out_file, exclude_prefixes):
                 info(f"  skip (orphan meta): {meta_rel}")
                 skipped += 1
                 continue
+            seen_guids.add(guid)
             added += 1
+
+        # merge dependency packages, deduplicated by GUID (the module's own
+        # assets win; overlapping deps-of-deps collapse to a single copy)
+        for dep in dep_packages:
+            dep_tar, groups = package_groups(dep["raw"])
+            merged = 0
+            for dguid, parts in groups.items():
+                if dguid in seen_guids:
+                    continue
+                seen_guids.add(dguid)
+                for part, member in parts.items():
+                    data = dep_tar.extractfile(member).read() if member.isfile() else b""
+                    ti = tarfile.TarInfo(f"{dguid}/{part}")
+                    ti.size = len(data)
+                    ti.mtime = mtime
+                    ti.mode = 0o644
+                    tar.addfile(ti, io.BytesIO(data))
+                merged += 1
+            info(f"  bundled {dep['name']} {dep['tag']}: {merged} assets")
+
     os.makedirs(os.path.dirname(out_file), exist_ok=True)
     with open(out_file, "wb") as fh:
         fh.write(gzip.compress(buf.getvalue()))
-    info(f"packed {added} assets ({skipped} skipped) -> {out_file}")
+    info(f"packed {added} own assets + {len(dep_packages)} bundled deps -> {out_file}")
+
+
+def extract_package_into_project(raw, proj):
+    """Unpack a .unitypackage's assets into a scaffold project at their pathnames."""
+    tar, groups = package_groups(raw)
+    count = 0
+    for parts in groups.values():
+        if "pathname" not in parts:
+            continue
+        pathname = tar.extractfile(parts["pathname"]).read().decode().splitlines()[0]
+        dest = os.path.join(proj, *pathname.split("/"))
+        if "asset" in parts:
+            os.makedirs(os.path.dirname(dest), exist_ok=True)
+            with open(dest, "wb") as fh:
+                fh.write(tar.extractfile(parts["asset"]).read())
+        else:
+            os.makedirs(dest, exist_ok=True)
+        if "asset.meta" in parts:
+            with open(dest + ".meta", "wb") as fh:
+                fh.write(tar.extractfile(parts["asset.meta"]).read())
+        count += 1
+    return count
 
 
 # --------------------------------------------------------------------------- #
@@ -438,8 +607,13 @@ def main():
     repo = os.path.abspath(args.repo)
     if not os.path.exists(os.path.join(repo, ".git")):
         fail(f"{repo} is not a git repo.")
-    name = args.name or os.path.basename(repo.rstrip("/\\"))
-    install_path = args.install_path or f"Assets/{name}"
+    manifest = load_manifest(repo)
+    if manifest and manifest.get("version") != args.version:
+        fail(f"module.json says version {manifest.get('version')!r} but you are "
+             f"releasing {args.version!r}. Update module.json (and commit) first -- "
+             f"ModuleManager reads the installed version from it.")
+    name = args.name or (manifest or {}).get("name") or os.path.basename(repo.rstrip("/\\"))
+    install_path = args.install_path or (manifest or {}).get("installPath") or f"Assets/{name}"
     tag = args.tag or args.version
     out_file = os.path.join(repo, "dist", f"{name}.unitypackage")
     tok = token(repo)
@@ -457,7 +631,10 @@ def main():
         fail(f"tag '{tag}' already exists.")
     branch = git(repo, "rev-parse", "--abbrev-ref", "HEAD")
 
-    # 2. local Unity verify (compile + tests + Windows build) ---------------
+    # 2. resolve + download the dependency closure ---------------------------
+    dep_packages = resolve_dependency_closure(manifest, tok)
+
+    # 3. local Unity verify (compile + tests + Windows build) ---------------
     if args.skip_tests:
         info("skipping local Unity verify (--skip-tests).")
     else:
@@ -469,12 +646,14 @@ def main():
             fail(f"could not find Unity {unity_version}. Pass --unity <path> or set "
                  f"UNITY_PATH, or --skip-tests to bypass.")
         verify_locally(repo, name, unity_version, deps, unity_exe,
-                       args.test_platforms, args.keep_test_project)
+                       args.test_platforms, args.keep_test_project,
+                       dep_packages=dep_packages)
 
-    # 3. pack ---------------------------------------------------------------
-    build_unitypackage(repo, install_path, out_file, args.exclude)
+    # 4. pack (own assets + bundled dependency closure) ----------------------
+    build_unitypackage(repo, install_path, out_file, args.exclude,
+                       dep_packages=dep_packages)
 
-    # 4. push branch + tag --------------------------------------------------
+    # 5. push branch + tag --------------------------------------------------
     info(f"pushing branch '{branch}' ...")
     git(repo, "push", "origin", branch)
     info(f"tagging {tag} ...")

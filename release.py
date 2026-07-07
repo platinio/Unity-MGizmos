@@ -27,16 +27,28 @@ inside the package -- ModuleManager reads it in the buyer's project):
         "version": "1.1.0",
         "installPath": "Assets/HermesEventGenerator",
         "unity": "6000.1",
-        "defines": ["MODULE_HERMES_EXIST"],
+        "defines": ["MODULE_HERMES_EXIST"],           # optional
+        "buildScene": "Samples/DamageSample/Sample.unity",  # optional, path within the module
+        "packages": {                                 # optional: UPM deps for the verify scaffold
+            "com.unity.visualscripting": "1.9.4"
+        },
         "dependencies": {
-            "UnityExtensions": { "repo": "platinio/unity-extensions", "version": "1.0.0" }
+            "UnityExtensions": { "repo": "platinio/unity-extensions", "version": "1.0.0" },
+            "Zenject":         { "repo": "platinio/Unity-Zenject", "version": "9.2.0", "optional": true }
         }
     }
 
-"version" must match the version being released (the script enforces this).
-Dependencies are fetched from each repo's LATEST GitHub release; the "version"
-on a dependency is the minimum the module needs (consumed by ModuleManager for
-warnings, not used to pin the download).
+Field notes:
+  version      must match the version being released (enforced).
+  defines      optional; ModuleManager unions the defines of PRESENT modules.
+  buildScene   optional; the scene the pre-release Windows build builds (so the
+               build exercises real content). Empty scene if omitted.
+  packages     optional; UPM packages the module needs, added to the verify
+               scaffold's manifest (NOT bundled -- buyers get them from the registry).
+  dependencies fetched from each repo's LATEST release and bundled into the package.
+               "version" is the minimum the module needs (ModuleManager warnings).
+               "optional": true  -> NOT bundled (integration behind a define-constrained
+               assembly, e.g. Zenject); the module compiles/works without it.
 
 Local verification (step 2) needs a Unity install matching the project version.
 The script auto-detects Unity from the standard Unity Hub location; override with
@@ -218,16 +230,23 @@ def package_manifest(raw):
 
 
 def resolve_dependency_closure(manifest, tok):
-    """BFS the dependency graph, downloading each dependency's latest release.
+    """BFS the dependency graph, downloading each REQUIRED dependency's latest release.
 
     Returns a list of {name, repo, tag, raw} dicts, deduplicated by repo. Each
     downloaded package's embedded module.json supplies its own dependencies;
     releases that predate module.json are treated as leaves.
+
+    Dependencies marked "optional": true are NOT bundled -- they're integrations
+    (e.g. Zenject) whose code lives behind a define-constrained assembly, so the
+    module works without them. ModuleManager still sees them in module.json.
     """
     packages, visited = [], set()
     queue = list((manifest or {}).get("dependencies", {}).items())
     while queue:
         name, spec = queue.pop(0)
+        if isinstance(spec, dict) and spec.get("optional"):
+            info(f"skipping optional dependency {name} (not bundled)")
+            continue
         slug = spec["repo"] if isinstance(spec, dict) else spec
         if slug.lower() in visited:
             continue
@@ -339,15 +358,40 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 
 // Injected by release.py: builds a StandaloneWindows64 player so we know the
-// tool's runtime code compiles for a real player, not just the editor.
+// tool's runtime code compiles for a real player, not just the editor. If
+// release.py passes "-ciScene <path>" (from module.json's buildScene), that
+// scene is built; otherwise a throwaway empty scene is used.
 public static class CIBuild
 {
+    private static string CiSceneArg()
+    {
+        var args = Environment.GetCommandLineArgs();
+        for (int i = 0; i < args.Length - 1; i++)
+            if (args[i] == "-ciScene") return args[i + 1];
+        return null;
+    }
+
     public static void BuildWindows()
     {
         try
         {
-            var scenes = EditorBuildSettings.scenes.Where(s => s.enabled)
+            string sceneArg = CiSceneArg();
+            string[] scenes;
+            if (!string.IsNullOrEmpty(sceneArg))
+            {
+                if (!File.Exists(sceneArg))
+                {
+                    Debug.LogError($"[CIBuild] buildScene not found: {sceneArg}");
+                    EditorApplication.Exit(1);
+                    return;
+                }
+                scenes = new[] { sceneArg };
+            }
+            else
+            {
+                scenes = EditorBuildSettings.scenes.Where(s => s.enabled)
                                             .Select(s => s.path).ToArray();
+            }
             if (scenes.Length == 0)
             {
                 var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene,
@@ -435,7 +479,7 @@ def parse_test_results(xml_path):
 
 
 def verify_locally(repo, name, unity_version, deps, unity_exe, platforms, keep,
-                   dep_packages=()):
+                   dep_packages=(), build_scene=None):
     info(f"scaffolding throwaway Unity {unity_version} project ({len(deps)} deps) ...")
     proj = scaffold_project(repo, name, unity_version, deps)
     for dep in dep_packages:
@@ -468,13 +512,15 @@ def verify_locally(repo, name, unity_version, deps, unity_exe, platforms, keep,
                     fail(f"{platform} tests failed:\n  " + "\n  ".join(failures[:25]))
 
         # --- Windows player build ---
-        info("building StandaloneWindows64 player ...")
+        build_args = ["-quit", "-executeMethod", "CIBuild.BuildWindows"]
+        if build_scene:
+            scene_path = f"Assets/{name}/{build_scene}"
+            info(f"building StandaloneWindows64 player with scene {scene_path} ...")
+            build_args += ["-ciScene", scene_path]
+        else:
+            info("building StandaloneWindows64 player (empty scene) ...")
         blog = os.path.join(proj, "build.log")
-        rc, logtxt, cs = run_unity(
-            unity_exe, proj,
-            ["-quit", "-executeMethod", "CIBuild.BuildWindows"],
-            blog, timeout=2400,
-        )
+        rc, logtxt, cs = run_unity(unity_exe, proj, build_args, blog, timeout=2400)
         if cs:
             fail("player build failed to compile:\n  " + "\n  ".join(cs[:25]))
         result_line = next((ln for ln in logtxt.splitlines() if "[CIBuild] result=" in ln), "")
@@ -641,13 +687,15 @@ def main():
         parent = find_parent_project(repo)
         unity_version = detect_unity_version(parent, args.unity_version)
         deps = scaffold_deps(parent, detect_tf_version(parent))
+        deps.update((manifest or {}).get("packages", {}))  # UPM deps for the scaffold
         unity_exe = find_unity(unity_version, args.unity)
         if not unity_exe:
             fail(f"could not find Unity {unity_version}. Pass --unity <path> or set "
                  f"UNITY_PATH, or --skip-tests to bypass.")
         verify_locally(repo, name, unity_version, deps, unity_exe,
                        args.test_platforms, args.keep_test_project,
-                       dep_packages=dep_packages)
+                       dep_packages=dep_packages,
+                       build_scene=(manifest or {}).get("buildScene"))
 
     # 4. pack (own assets + bundled dependency closure) ----------------------
     build_unitypackage(repo, install_path, out_file, args.exclude,

@@ -37,6 +37,16 @@ namespace ArcaneOnyx.MeshGizmos
             drawCalls = dc;
         }
 
+        /// <summary>An empty composite from the pool - see <see cref="MGizmoDrawCall.Get"/> for why.</summary>
+        public static MGizmoCompositeDrawCall Get()
+        {
+            var composite = pool.Count > 0 ? pool.Pop() : new MGizmoCompositeDrawCall();
+            composite.pooled = false;
+            composite.KeepOneFrame = false;
+            composite.AddThisFrame = false;
+            return composite;
+        }
+
         public void AddDrawCall(MGizmoBaseDrawCall drawCall)
         {
             drawCalls.Add(drawCall);

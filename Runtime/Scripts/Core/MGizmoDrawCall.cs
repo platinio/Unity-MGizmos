@@ -46,11 +46,49 @@ namespace ArcaneOnyx.MeshGizmos
 
         public MGizmoDrawCall(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
         {
+            Reinitialize(mesh, position, rotation, scale);
+        }
+
+        /// <summary>
+        /// A draw call from the pool, fully reset - what <c>MGizmos.Render*</c> hands out.
+        /// </summary>
+        /// <remarks>
+        /// Originals used to be constructed fresh on every <c>Render*</c> call while only the per-camera
+        /// clones were pooled, which made the caller-facing half of the API the only allocating half. That
+        /// went unnoticed under the timed flow (a handful of calls per event) and stopped being tolerable
+        /// with <see cref="MGizmoGroup"/>, where rebuilding a picture of a few hundred elements several
+        /// times a second is the intended use. A released original re-enters this same pool, so a steady
+        /// rebuild loop settles at zero allocations.
+        /// </remarks>
+        public static MGizmoDrawCall Get(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
+        {
+            var dc = pool.Count > 0 ? pool.Pop() : new MGizmoDrawCall();
+            dc.pooled = false;
+            dc.Reinitialize(mesh, position, rotation, scale);
+            return dc;
+        }
+
+        /// <summary>
+        /// Resets every field to what the four-argument constructor would produce, so a pooled instance is
+        /// indistinguishable from a fresh one. Kept in one place because a field added to this class and
+        /// missed here becomes the classic pool bug: state from a previous life leaking into a new gizmo.
+        /// </summary>
+        protected void Reinitialize(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale)
+        {
             this.mesh = mesh;
             this.position = position;
             this.scale = scale;
             this.rotation = rotation;
-            this.duration = 0;
+
+            duration = 0;
+            material = null;
+            color = Color.white;
+            colorDirty = true;
+            shadowCastingMode = ShadowCastingMode.Off;
+            receiveShadows = false;
+            KeepOneFrame = false;
+            AddThisFrame = false;
+            materialPropertyBlock?.Clear();
 
             //position/rotation/scale never change after construction, so the matrix is built once here
             //instead of every frame (billboard text is the exception and rebuilds it in its Draw)

@@ -14,6 +14,10 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmosRendererConfig Config => MGizmosRendererConfig.Instance;
         private static Dictionary<Camera, List<MGizmoBaseDrawCall>> meshDrawCalls = new();
 
+        //retained pictures - drawn on every camera pass until their owners clear them. Registration is
+        //managed by MGizmoGroup's constructor and Dispose; see that class for the ownership rules.
+        private static readonly List<MGizmoGroup> groups = new();
+
         //shared no-op draw call returned by every Render* early-out (disabled or missing config), so a
         //disabled MGizmos doesn't allocate a dummy per call; it has no mesh/material and never draws
         private static readonly MGizmoDrawCall inertDrawCall = new();
@@ -143,8 +147,20 @@ namespace ArcaneOnyx.MeshGizmos
                 meshDrawCalls.Clear();
             }
 
+            //contents only, never the registration: the positions a group describes belong to the scene
+            //or play session that is going away, but the group's owner may survive the transition (an
+            //[ExecuteAlways] tool does) and expects to rebuild into the same group
+            for (int i = 0; i < groups.Count; i++)
+            {
+                groups[i].Clear();
+            }
+
             MGizmoInstancedBatcher.Clear();
         }
+
+        internal static void RegisterGroup(MGizmoGroup group) => groups.Add(group);
+
+        internal static void UnregisterGroup(MGizmoGroup group) => groups.Remove(group);
 
         private static void ReleaseDrawCalls(List<MGizmoBaseDrawCall> drawCalls)
         {
@@ -206,10 +222,14 @@ namespace ArcaneOnyx.MeshGizmos
         {
             if (!IsEnable) return;
 
-            //if the camera doesnt exist add it
+            //if the camera doesnt exist add it. Retained groups still draw on this very first pass -
+            //they are not per-camera state, and a scene view opened mid-session should show the current
+            //picture immediately rather than after its second repaint
             if (!meshDrawCalls.TryGetValue(camera, out var drawCalls))
             {
                 meshDrawCalls.Add(camera, new List<MGizmoBaseDrawCall>());
+                DrawGroups(camera);
+                MGizmoInstancedBatcher.Flush(camera);
                 return;
             }
             
@@ -237,9 +257,19 @@ namespace ArcaneOnyx.MeshGizmos
                 }
             }
 
+            DrawGroups(camera);
+
             //draw calls whose material supports instancing submitted themselves to the batcher instead
             //of issuing an individual DrawMesh - render them now as instanced batches for this camera
             MGizmoInstancedBatcher.Flush(camera);
+        }
+
+        private static void DrawGroups(Camera camera)
+        {
+            for (int i = 0; i < groups.Count; i++)
+            {
+                groups[i].Draw(camera);
+            }
         }
 
         public static void RemoveRenderCamera(Camera camera)
@@ -269,7 +299,7 @@ namespace ArcaneOnyx.MeshGizmos
             if (!IsEnable) return inertDrawCall;
             if (Config == null) return inertDrawCall;
             
-            MGizmoDrawCall dc = new MGizmoDrawCall(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
             InitializeMeshDrawCall(dc);
             return dc;
         }
@@ -285,7 +315,7 @@ namespace ArcaneOnyx.MeshGizmos
             if (!IsEnable) return inertDrawCall;
             if (Config == null) return inertDrawCall;
             
-            MGizmoDrawCall dc = new MGizmoDrawCall(Config.CylinderMesh, position, rotation, scale);
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.CylinderMesh, position, rotation, scale);
             InitializeMeshDrawCall(dc);
             return dc;
         }
@@ -295,11 +325,14 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmoBaseDrawCall RenderLine(Vector3 from, Vector3 to, float lineWidth)
         {
             if (!IsEnable) return inertDrawCall;
-            
+            //same guard as every other primitive: without the config there is no mesh to draw, and a
+            //debug call must degrade to nothing rather than throw out of whoever asked for a gizmo
+            if (Config == null) return inertDrawCall;
+
             float d = Vector3.Distance(from, to);
             Vector3 dir = (to - from).normalized;
 
-            MGizmoDrawCall dc = new MGizmoDrawCall(Config.CylinderMesh, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.CylinderMesh, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
             InitializeMeshDrawCall(dc);
 
             return dc;
@@ -314,8 +347,9 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmoBaseDrawCall RenderCube(Vector3 position, Quaternion rotation, Vector3 scale)
         {
             if (!IsEnable) return inertDrawCall;
-            
-            MGizmoDrawCall dc = new MGizmoDrawCall(Config.CubeMesh, position, rotation, scale);
+            if (Config == null) return inertDrawCall;
+
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.CubeMesh, position, rotation, scale);
             InitializeMeshDrawCall(dc);
 
             return dc;
@@ -332,7 +366,7 @@ namespace ArcaneOnyx.MeshGizmos
             if (!IsEnable) return inertDrawCall;
             if (Config == null) return inertDrawCall;
             
-            MGizmoDrawCall dc = new MGizmoDrawCall(Config.QuadMesh, position, rotation, scale);
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.QuadMesh, position, rotation, scale);
             InitializeMeshDrawCall(dc);
 
             return dc;
@@ -348,7 +382,7 @@ namespace ArcaneOnyx.MeshGizmos
         {
             if (!IsEnable) return inertDrawCall;
             
-            var compositeMeshDrawCall = new MGizmoCompositeDrawCall();
+            var compositeMeshDrawCall = MGizmoCompositeDrawCall.Get();
 
             Vector3 right = Quaternion.Euler(0, 0, 90) * upwards;
             Vector3 forward = Vector3.Cross(upwards, right);
@@ -377,6 +411,69 @@ namespace ArcaneOnyx.MeshGizmos
             return compositeMeshDrawCall;
         }
 
+        public static MGizmoBaseDrawCall RenderDisc(Vector3 center, float radius) => RenderDisc(center, radius, Vector3.up);
+
+        //Draws a filled disc of the given radius, facing along upwards. Double-sided, so it stays visible
+        //from below - a range or area marker laid on the ground must not vanish when the camera dips
+        //under the floor plane.
+        public static MGizmoBaseDrawCall RenderDisc(Vector3 center, float radius, Vector3 upwards)
+        {
+            if (!IsEnable) return inertDrawCall;
+            if (Config == null) return inertDrawCall;
+
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(
+                MGizmoProceduralMeshes.Disc, center, Quaternion.FromToRotation(Vector3.up, upwards),
+                new Vector3(radius, 1.0f, radius));
+            InitializeMeshDrawCall(dc);
+            return dc;
+        }
+
+        public static MGizmoBaseDrawCall RenderCross(Vector3 center, float size) => RenderCross(center, size, 0.01f, Vector3.up);
+
+        public static MGizmoBaseDrawCall RenderCross(Vector3 center, float size, float lineWidth) => RenderCross(center, size, lineWidth, Vector3.up);
+
+        //Draws an X of two crossed lines in the plane perpendicular to upwards, spanning size from the
+        //centre to each tip. The universal "ruled out" marker - a rejected candidate, a failed probe, an
+        //unreachable point - kept distinct from a sphere so exclusion never reads as just another sample.
+        public static MGizmoBaseDrawCall RenderCross(Vector3 center, float size, float lineWidth, Vector3 upwards)
+        {
+            if (!IsEnable) return inertDrawCall;
+
+            Vector3 right = Quaternion.Euler(0, 0, 90) * upwards;
+            Vector3 forward = Vector3.Cross(upwards, right);
+
+            Vector3 a = (right + forward).normalized * size;
+            Vector3 b = (right - forward).normalized * size;
+
+            var compositeMeshDrawCall = MGizmoCompositeDrawCall.Get();
+            compositeMeshDrawCall.AddDrawCall(RenderLine(center - a, center + a, lineWidth));
+            compositeMeshDrawCall.AddDrawCall(RenderLine(center - b, center + b, lineWidth));
+
+            InitializeMeshDrawCall(compositeMeshDrawCall);
+            return compositeMeshDrawCall;
+        }
+
+        public static MGizmoBaseDrawCall RenderBar(Vector3 basePosition, float height, float width) => RenderBar(basePosition, Vector3.up, height, width);
+
+        //Draws a square column of the given height standing on basePosition, growing along direction.
+        //Base-anchored on purpose: the built-in cube is centre-anchored, and hand-offsetting a centre by
+        //half a height is the arithmetic everyone visualizing a value field gets wrong once. A negative
+        //height grows the bar the other way.
+        public static MGizmoBaseDrawCall RenderBar(Vector3 basePosition, Vector3 direction, float height, float width)
+        {
+            if (!IsEnable) return inertDrawCall;
+            if (Config == null) return inertDrawCall;
+
+            Vector3 dir = direction.normalized * Mathf.Sign(height);
+            float length = Mathf.Abs(height);
+
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(
+                Config.CubeMesh, basePosition + dir * (length * 0.5f),
+                Quaternion.FromToRotation(Vector3.up, dir), new Vector3(width, length, width));
+            InitializeMeshDrawCall(dc);
+            return dc;
+        }
+
         public static MGizmoBaseDrawCall RenderMesh(Mesh mesh, Vector3 position) => RenderMesh(mesh, position, Quaternion.identity, Vector3.one);
         
         public static MGizmoBaseDrawCall RenderMesh(Mesh mesh, Vector3 position, Quaternion rotation) => RenderMesh(mesh, position, rotation, Vector3.one);
@@ -387,7 +484,7 @@ namespace ArcaneOnyx.MeshGizmos
         {
             if (!IsEnable) return inertDrawCall;
             
-            MGizmoDrawCall dc = new MGizmoDrawCall(mesh, position, rotation, scale);
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(mesh, position, rotation, scale);
             InitializeMeshDrawCall(dc);
 
             return dc;
@@ -398,7 +495,7 @@ namespace ArcaneOnyx.MeshGizmos
             if (!IsEnable) return inertDrawCall;
             if (Config == null) return inertDrawCall;
             
-            var compositeMeshDrawCall = new MGizmoCompositeDrawCall();
+            var compositeMeshDrawCall = MGizmoCompositeDrawCall.Get();
             
             float d = Vector3.Distance(from, to);
             Vector3 dir = (to - from).normalized;
@@ -408,12 +505,12 @@ namespace ArcaneOnyx.MeshGizmos
             Vector3 arrowHeadOffset = (dir * (headLength / 2.0f));
             Vector3 stemScale = new Vector3(stemWidth, (d / 2.0f) - (headLength / 2.0f), stemWidth);
             
-            MGizmoDrawCall cylinderDrawCall = new MGizmoDrawCall(Config.CylinderMesh,  stemStartPosition - arrowHeadOffset, Quaternion.FromToRotation(Vector3.up, dir), stemScale);
+            MGizmoDrawCall cylinderDrawCall = MGizmoDrawCall.Get(Config.CylinderMesh,  stemStartPosition - arrowHeadOffset, Quaternion.FromToRotation(Vector3.up, dir), stemScale);
 
             Quaternion arrowHeadRotation = Quaternion.FromToRotation(Vector3.up, dir) * Quaternion.Euler(-90, 0, 0);
             Vector3 arrowHeadScale = Vector3.one * arrowHeadSize;
             
-            MGizmoDrawCall arrowHeadDrawCall = new MGizmoDrawCall(Config.ArrowHead, to - (dir * headLength), arrowHeadRotation, arrowHeadScale);
+            MGizmoDrawCall arrowHeadDrawCall = MGizmoDrawCall.Get(Config.ArrowHead, to - (dir * headLength), arrowHeadRotation, arrowHeadScale);
             
             compositeMeshDrawCall.AddDrawCall(cylinderDrawCall);
             compositeMeshDrawCall.AddDrawCall(arrowHeadDrawCall);
@@ -437,7 +534,7 @@ namespace ArcaneOnyx.MeshGizmos
             var mesh = MGizmoTextMesh.Build(text, font, size);
             if (mesh == null) return inertDrawCall;
 
-            var dc = new MGizmoTextDrawCall(mesh, position, Quaternion.identity, Vector3.one, billboard);
+            var dc = MGizmoTextDrawCall.Get(mesh, position, Quaternion.identity, Vector3.one, billboard);
             InitializeMeshDrawCall(dc);
 
             //override the default material with the font atlas material so the glyphs actually render

@@ -1,5 +1,3 @@
-using System.Reflection;
-using ArcaneOnyx.MeshGizmos;
 using NUnit.Framework;
 using UnityEngine;
 
@@ -68,8 +66,8 @@ namespace ArcaneOnyx.MeshGizmos.Tests
             // the cube mesh is centre-anchored, so the centre must sit half the height above the base
             var bar = MGizmos.RenderBar(new Vector3(2f, 1f, 3f), 4f, 0.5f);
 
-            Vector3 position = ReadField<Vector3>(bar, "position");
-            Vector3 scale = ReadField<Vector3>(bar, "scale");
+            Vector3 position = DrawCallProbe.Read<Vector3>(bar, "position");
+            Vector3 scale = DrawCallProbe.Read<Vector3>(bar, "scale");
 
             Assert.AreEqual(new Vector3(2f, 3f, 3f), position, "centre = base + up * height/2");
             Assert.AreEqual(4f, scale.y, 1e-4f);
@@ -81,8 +79,8 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         {
             var bar = MGizmos.RenderBar(new Vector3(0f, 10f, 0f), -4f, 0.5f);
 
-            Vector3 position = ReadField<Vector3>(bar, "position");
-            Vector3 scale = ReadField<Vector3>(bar, "scale");
+            Vector3 position = DrawCallProbe.Read<Vector3>(bar, "position");
+            Vector3 scale = DrawCallProbe.Read<Vector3>(bar, "scale");
 
             Assert.AreEqual(new Vector3(0f, 8f, 0f), position, "a negative height hangs the bar below its base");
             Assert.AreEqual(4f, scale.y, 1e-4f, "the mesh scale stays positive; direction carries the sign");
@@ -95,26 +93,8 @@ namespace ArcaneOnyx.MeshGizmos.Tests
 
             Assert.IsInstanceOf<MGizmoCompositeDrawCall>(cross);
 
-            var lines = ReadField<System.Collections.Generic.List<MGizmoBaseDrawCall>>(cross, "drawCalls");
+            var lines = DrawCallProbe.Read<System.Collections.Generic.List<MGizmoBaseDrawCall>>(cross, "drawCalls");
             Assert.AreEqual(2, lines.Count);
-        }
-
-        //Protected/private state read via reflection rather than widened for the test's sake: position
-        //and scale are implementation details of a draw call, and a public accessor added only so a test
-        //can see them would be API the next caller starts depending on.
-        private static T ReadField<T>(object target, string fieldName)
-        {
-            var type = target.GetType();
-            FieldInfo field = null;
-
-            while (type != null && field == null)
-            {
-                field = type.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-                type = type.BaseType;
-            }
-
-            Assert.IsNotNull(field, $"field '{fieldName}' not found on {target.GetType().Name}");
-            return (T)field.GetValue(target);
         }
     }
 }

@@ -300,7 +300,7 @@ namespace ArcaneOnyx.MeshGizmos
             if (Config == null) return inertDrawCall;
             
             //the mesh is 1 unit across, so the caller's radius doubles into a diameter
-            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(MGizmoProceduralMeshes.Sphere, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
             InitializeMeshDrawCall(dc);
             return dc;
         }

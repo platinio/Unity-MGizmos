@@ -107,12 +107,98 @@ MGizmos.RenderArrow(from, to, stemWidth, arrowHeadSize);
 ```
 ![alt text](https://github.com/platinio/Unity-MGizmos/blob/main/ReadmeResources/arrowExample.png?raw=true)
 
+# Render Disc
+
+A filled disc, facing along `upwards` (default up). Double-sided, so a marker laid on the ground stays
+visible from below. Scale the alpha of its colour down and overlap several to paint a heatmap.
+
+```csharp
+MGizmos.RenderDisc(center, radius, upwards);
+```
+
+# Render Cross
+
+An X of two crossed lines in the plane perpendicular to `upwards` - the universal "ruled out" marker,
+kept visually distinct from a sphere so exclusion never reads as just another sample.
+
+```csharp
+MGizmos.RenderCross(center, size, lineWidth, upwards);
+```
+
+# Render Bar
+
+A square column standing on `basePosition`, growing along `direction` (default up). Base-anchored on
+purpose - the built-in cube is centre-anchored, and offsetting a centre by half a height is the
+arithmetic everyone visualizing a value field gets wrong once. A negative height grows the other way.
+
+```csharp
+MGizmos.RenderBar(basePosition, height, width);
+```
+
+# Retained pictures: MGizmoGroup
+
+Every `Render*` call above is timed: it shows for `SetDuration` seconds (or one frame) and expires.
+That answers "show this event", but a tool that owns a *picture* of something - a path, a sensor range,
+a scored field of candidates - would have to re-issue every call each frame and fight the frame cadence
+with durations.
+
+`MGizmoGroup` states the intent directly: everything added to the group draws on every gizmo camera,
+every frame, until the group is cleared, rebuilt or disposed.
+
+```csharp
+private readonly MGizmoGroup picture = new();
+
+void OnStateChanged()
+{
+    picture.Clear();
+    foreach (var point in points)
+    {
+        picture.Add(MGizmos.RenderSphere(point.Position, 0.25f).SetColor(point.Color));
+    }
+}
+
+void OnDestroy() => picture.Dispose();
+```
+
+Rules of the road:
+
+- `Add` transfers ownership. Configure a call before or after adding it, but never touch it after the
+  group is cleared - released calls are recycled into the draw-call pools.
+- Durations are ignored; retained calls do not age.
+- Scene loads and play-mode transitions clear every group's *contents* (those positions belong to the
+  world that is going away) but keep the group registered, so an `[ExecuteAlways]` owner just rebuilds
+  into the same group.
+- Dispose the group when its owner goes away for good; an undisposed group keeps drawing forever.
+- Rebuilding is cheap: released originals return to the pools, so a steady rebuild loop settles at zero
+  allocations.
+
 # Render Mesh
 
 ```csharp
 MGizmos.RenderMesh(mesh, position, rotation, scale);
 ```
 ![alt text](https://github.com/platinio/Unity-MGizmos/blob/main/ReadmeResources/meshExample.png?raw=true)
+
+# Primitive Meshes
+
+MGizmos ships **no mesh assets**. Every primitive it draws — sphere, cube, cylinder, quad, cone (the
+arrowhead) and disc — is generated in code on first use and cached for the session. Nothing to import,
+nothing to wire up, and no references into Unity's built-in resource library to go stale between editor
+versions. The renderer config asset now carries only the default material, the default color and the text
+font.
+
+The primitives keep Unity's own conventions, which matters if you compose transforms yourself:
+
+| Mesh | Dimensions |
+|---|---|
+| Sphere | centred on the origin, **1 unit in diameter** |
+| Cube | centred on the origin, 1 × 1 × 1, hard-edged |
+| Cylinder | about the Y axis, radius 0.5, **2 units tall** (y from -1 to 1) |
+| Quad | 1 × 1 in the XY plane, single-sided, facing -Z |
+| Cone | base circle radius 0.5 on the XZ plane, tip 1 unit up +Y |
+| Disc | radius 1 in the XZ plane, double-sided |
+
+All of them carry normals, so swapping in a lit shader with `SetMaterial` works.
 
 # Performance and GPU Instancing
 

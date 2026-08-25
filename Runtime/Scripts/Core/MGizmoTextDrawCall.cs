@@ -26,6 +26,16 @@ namespace ArcaneOnyx.MeshGizmos
             this.billboard = billboard;
         }
 
+        /// <summary>A label from the pool, fully reset - see <see cref="MGizmoDrawCall.Get"/> for why.</summary>
+        public static MGizmoTextDrawCall Get(Mesh mesh, Vector3 position, Quaternion rotation, Vector3 scale, bool billboard)
+        {
+            var dc = pool.Count > 0 ? pool.Pop() : new MGizmoTextDrawCall();
+            dc.pooled = false;
+            dc.Reinitialize(mesh, position, rotation, scale);
+            dc.billboard = billboard;
+            return dc;
+        }
+
         public override void Draw(Camera camera, float deltaTime)
         {
             if (billboard && camera != null)

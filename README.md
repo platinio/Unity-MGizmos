@@ -179,6 +179,27 @@ MGizmos.RenderMesh(mesh, position, rotation, scale);
 ```
 ![alt text](https://github.com/platinio/Unity-MGizmos/blob/main/ReadmeResources/meshExample.png?raw=true)
 
+# Primitive Meshes
+
+MGizmos ships **no mesh assets**. Every primitive it draws — sphere, cube, cylinder, quad, cone (the
+arrowhead) and disc — is generated in code on first use and cached for the session. Nothing to import,
+nothing to wire up, and no references into Unity's built-in resource library to go stale between editor
+versions. The renderer config asset now carries only the default material, the default color and the text
+font.
+
+The primitives keep Unity's own conventions, which matters if you compose transforms yourself:
+
+| Mesh | Dimensions |
+|---|---|
+| Sphere | centred on the origin, **1 unit in diameter** |
+| Cube | centred on the origin, 1 × 1 × 1, hard-edged |
+| Cylinder | about the Y axis, radius 0.5, **2 units tall** (y from -1 to 1) |
+| Quad | 1 × 1 in the XY plane, single-sided, facing -Z |
+| Cone | base circle radius 0.5 on the XZ plane, tip 1 unit up +Y |
+| Disc | radius 1 in the XZ plane, double-sided |
+
+All of them carry normals, so swapping in a lit shader with `SetMaterial` works.
+
 # Performance and GPU Instancing
 
 Draw calls that share a mesh and a material with **Enable GPU Instancing** turned on are batched into a

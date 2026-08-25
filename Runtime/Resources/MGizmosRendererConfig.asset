@@ -14,10 +14,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   defaultMaterial: {fileID: 2100000, guid: b9a48de0172d16949833d3c571249788, type: 2}
   defaultColor: {r: 1, g: 0, b: 0, a: 1}
-  sphereMesh: {fileID: 10207, guid: 0000000000000000e000000000000000, type: 0}
-  capsuleMesh: {fileID: 10208, guid: 0000000000000000e000000000000000, type: 0}
-  cubeMesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
-  cylinderMesh: {fileID: 10206, guid: 0000000000000000e000000000000000, type: 0}
-  planeMesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
-  quadMesh: {fileID: 10210, guid: 0000000000000000e000000000000000, type: 0}
-  arrowHead: {fileID: 3613567641014311022, guid: 0ba93735bcb2f9044be5994aac454d02, type: 3}
+  textFont: {fileID: 0}

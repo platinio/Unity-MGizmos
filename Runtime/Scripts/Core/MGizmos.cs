@@ -299,7 +299,8 @@ namespace ArcaneOnyx.MeshGizmos
             if (!IsEnable) return inertDrawCall;
             if (Config == null) return inertDrawCall;
             
-            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.SphereMesh, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
+            //the mesh is 1 unit across, so the caller's radius doubles into a diameter
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(MGizmoProceduralMeshes.Sphere, position, Quaternion.identity, Vector3.one * (radius * 2.0f));
             InitializeMeshDrawCall(dc);
             return dc;
         }
@@ -315,7 +316,7 @@ namespace ArcaneOnyx.MeshGizmos
             if (!IsEnable) return inertDrawCall;
             if (Config == null) return inertDrawCall;
             
-            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.CylinderMesh, position, rotation, scale);
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(MGizmoProceduralMeshes.Cylinder, position, rotation, scale);
             InitializeMeshDrawCall(dc);
             return dc;
         }
@@ -325,14 +326,15 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmoBaseDrawCall RenderLine(Vector3 from, Vector3 to, float lineWidth)
         {
             if (!IsEnable) return inertDrawCall;
-            //same guard as every other primitive: without the config there is no mesh to draw, and a
-            //debug call must degrade to nothing rather than throw out of whoever asked for a gizmo
+            //same guard as every other primitive: without the config there is no material to draw with, and
+            //a debug call must degrade to nothing rather than throw out of whoever asked for a gizmo
             if (Config == null) return inertDrawCall;
 
             float d = Vector3.Distance(from, to);
             Vector3 dir = (to - from).normalized;
 
-            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.CylinderMesh, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
+            //the cylinder mesh is 2 units tall, so half the distance is the right Y scale
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(MGizmoProceduralMeshes.Cylinder, from + (dir * (d / 2.0f)), Quaternion.FromToRotation(Vector3.up, dir), new Vector3(lineWidth, d / 2.0f, lineWidth));
             InitializeMeshDrawCall(dc);
 
             return dc;
@@ -349,7 +351,7 @@ namespace ArcaneOnyx.MeshGizmos
             if (!IsEnable) return inertDrawCall;
             if (Config == null) return inertDrawCall;
 
-            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.CubeMesh, position, rotation, scale);
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(MGizmoProceduralMeshes.Cube, position, rotation, scale);
             InitializeMeshDrawCall(dc);
 
             return dc;
@@ -366,7 +368,7 @@ namespace ArcaneOnyx.MeshGizmos
             if (!IsEnable) return inertDrawCall;
             if (Config == null) return inertDrawCall;
             
-            MGizmoDrawCall dc = MGizmoDrawCall.Get(Config.QuadMesh, position, rotation, scale);
+            MGizmoDrawCall dc = MGizmoDrawCall.Get(MGizmoProceduralMeshes.Quad, position, rotation, scale);
             InitializeMeshDrawCall(dc);
 
             return dc;
@@ -468,7 +470,7 @@ namespace ArcaneOnyx.MeshGizmos
             float length = Mathf.Abs(height);
 
             MGizmoDrawCall dc = MGizmoDrawCall.Get(
-                Config.CubeMesh, basePosition + dir * (length * 0.5f),
+                MGizmoProceduralMeshes.Cube, basePosition + dir * (length * 0.5f),
                 Quaternion.FromToRotation(Vector3.up, dir), new Vector3(width, length, width));
             InitializeMeshDrawCall(dc);
             return dc;
@@ -505,12 +507,14 @@ namespace ArcaneOnyx.MeshGizmos
             Vector3 arrowHeadOffset = (dir * (headLength / 2.0f));
             Vector3 stemScale = new Vector3(stemWidth, (d / 2.0f) - (headLength / 2.0f), stemWidth);
             
-            MGizmoDrawCall cylinderDrawCall = MGizmoDrawCall.Get(Config.CylinderMesh,  stemStartPosition - arrowHeadOffset, Quaternion.FromToRotation(Vector3.up, dir), stemScale);
+            MGizmoDrawCall cylinderDrawCall = MGizmoDrawCall.Get(MGizmoProceduralMeshes.Cylinder,  stemStartPosition - arrowHeadOffset, Quaternion.FromToRotation(Vector3.up, dir), stemScale);
 
-            Quaternion arrowHeadRotation = Quaternion.FromToRotation(Vector3.up, dir) * Quaternion.Euler(-90, 0, 0);
+            //the cone stands on its base pointing up +Y, so aligning up with dir is the whole rotation -
+            //no axis correction, unlike the +Z-facing FBX this replaced
+            Quaternion arrowHeadRotation = Quaternion.FromToRotation(Vector3.up, dir);
             Vector3 arrowHeadScale = Vector3.one * arrowHeadSize;
-            
-            MGizmoDrawCall arrowHeadDrawCall = MGizmoDrawCall.Get(Config.ArrowHead, to - (dir * headLength), arrowHeadRotation, arrowHeadScale);
+
+            MGizmoDrawCall arrowHeadDrawCall = MGizmoDrawCall.Get(MGizmoProceduralMeshes.Cone, to - (dir * headLength), arrowHeadRotation, arrowHeadScale);
             
             compositeMeshDrawCall.AddDrawCall(cylinderDrawCall);
             compositeMeshDrawCall.AddDrawCall(arrowHeadDrawCall);

@@ -413,6 +413,70 @@ namespace ArcaneOnyx.MeshGizmos
             return compositeMeshDrawCall;
         }
 
+        public static MGizmoBaseDrawCall RenderArc(Vector3 center, Vector3 direction, float angle, float radius) => RenderArc(center, direction, angle, radius, 24, 0.01f, Vector3.up);
+
+        //Draws the curved edge of a sector: an arc spanning the given total angle, centred on direction,
+        //in the plane perpendicular to upwards. Boundary only, so the world stays readable through it.
+        public static MGizmoBaseDrawCall RenderArc(Vector3 center, Vector3 direction, float angle, float radius, int segments, float lineWidth, Vector3 upwards)
+        {
+            if (!IsEnable) return inertDrawCall;
+
+            var compositeMeshDrawCall = MGizmoCompositeDrawCall.Get();
+            if (!TryAddArcDrawCalls(compositeMeshDrawCall, center, direction, angle, radius, segments, lineWidth, upwards, out _, out _)) return inertDrawCall;
+
+            InitializeMeshDrawCall(compositeMeshDrawCall);
+            return compositeMeshDrawCall;
+        }
+
+        public static MGizmoBaseDrawCall RenderSector(Vector3 center, Vector3 direction, float angle, float radius) => RenderSector(center, direction, angle, radius, 24, 0.01f, Vector3.up);
+
+        //The closed wedge outline: the arc plus its two radius edges back to the centre. The natural
+        //shape for anything cone-of-vision shaped - a sensor's field of view, a melee swing, a
+        //spotlight footprint.
+        public static MGizmoBaseDrawCall RenderSector(Vector3 center, Vector3 direction, float angle, float radius, int segments, float lineWidth, Vector3 upwards)
+        {
+            if (!IsEnable) return inertDrawCall;
+
+            var compositeMeshDrawCall = MGizmoCompositeDrawCall.Get();
+            if (!TryAddArcDrawCalls(compositeMeshDrawCall, center, direction, angle, radius, segments, lineWidth, upwards, out Vector3 first, out Vector3 last)) return inertDrawCall;
+
+            compositeMeshDrawCall.AddDrawCall(RenderLine(center, first, lineWidth));
+            compositeMeshDrawCall.AddDrawCall(RenderLine(center, last, lineWidth));
+
+            InitializeMeshDrawCall(compositeMeshDrawCall);
+            return compositeMeshDrawCall;
+        }
+
+        //A direction parallel to upwards has no footprint in the drawing plane, so there is no arc to
+        //draw - callers get an inert draw call rather than a degenerate shape.
+        private static bool TryAddArcDrawCalls(MGizmoCompositeDrawCall compositeMeshDrawCall, Vector3 center, Vector3 direction, float angle, float radius, int segments, float lineWidth, Vector3 upwards, out Vector3 first, out Vector3 last)
+        {
+            first = last = center;
+
+            Vector3 flatDirection = Vector3.ProjectOnPlane(direction, upwards);
+            if (flatDirection.sqrMagnitude < 0.000001f || segments < 1) return false;
+            flatDirection = flatDirection.normalized;
+
+            Vector3 PointOnArc(int segment)
+            {
+                float currentAngle = Mathf.Lerp(-angle * 0.5f, angle * 0.5f, (float) segment / segments);
+                return center + Quaternion.AngleAxis(currentAngle, upwards) * flatDirection * radius;
+            }
+
+            first = PointOnArc(0);
+            Vector3 previous = first;
+
+            for (int i = 1; i <= segments; i++)
+            {
+                Vector3 current = PointOnArc(i);
+                compositeMeshDrawCall.AddDrawCall(RenderLine(previous, current, lineWidth));
+                previous = current;
+            }
+
+            last = previous;
+            return true;
+        }
+
         public static MGizmoBaseDrawCall RenderDisc(Vector3 center, float radius) => RenderDisc(center, radius, Vector3.up);
 
         //Draws a filled disc of the given radius, facing along upwards. Double-sided, so it stays visible

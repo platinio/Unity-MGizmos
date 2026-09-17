@@ -603,6 +603,7 @@ namespace ArcaneOnyx.MeshGizmos
             if (mesh == null) return inertDrawCall;
 
             var dc = MGizmoTextDrawCall.Get(mesh, position, Quaternion.identity, Vector3.one, billboard);
+            dc.BindSource(text, font, size);
             InitializeMeshDrawCall(dc);
 
             //override the default material with the font atlas material so the glyphs actually render

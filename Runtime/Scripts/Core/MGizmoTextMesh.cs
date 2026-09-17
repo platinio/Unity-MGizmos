@@ -7,15 +7,37 @@ namespace ArcaneOnyx.MeshGizmos
     //the same Graphics.DrawMesh path as every other gizmo. The block is centred on the local origin so a
     //billboard draw call can face it at the camera. Pair it with the font's material (font.material).
     //
-    //Meshes are cached by text+size and reused, so calling this every frame (e.g. a hover label) does not
-    //leak a mesh per call. The cache is cleared whenever the font atlas is rebuilt, because that
-    //invalidates the glyph UVs the cached meshes baked in.
+    //Meshes are cached by font+size+text and reused, so calling this every frame (e.g. a hover label)
+    //does not leak a mesh per call. A cached mesh stops being valid when its font's atlas is rebuilt (the
+    //glyph UVs it baked in are gone) or when the cache is evicted. Either way Version changes, and a
+    //holder that outlives the call - a retained label - builds again; see MGizmoTextDrawCall.Draw.
     public static class MGizmoTextMesh
     {
         private const int RenderFontSize = 64;
-        private const int MaxCacheSize = 64;
+        private const int MaxCacheSize = 256;
 
-        private static readonly Dictionary<string, Mesh> cache = new();
+        private readonly struct Entry
+        {
+            public readonly Mesh Mesh;
+            public readonly Font Font;
+
+            public Entry(Mesh mesh, Font font)
+            {
+                Mesh = mesh;
+                Font = font;
+            }
+        }
+
+        private static readonly Dictionary<string, Entry> cache = new();
+        private static readonly List<string> keyScratch = new();
+        private static readonly List<Mesh> retired = new();
+        private static bool destroyScheduled;
+
+        /// <summary>
+        /// Changes whenever meshes this class handed out stopped being valid. Anything that keeps a mesh
+        /// past the call that built it compares this and calls <see cref="Build"/> again.
+        /// </summary>
+        public static int Version { get; private set; }
 
         static MGizmoTextMesh()
         {
@@ -27,8 +49,8 @@ namespace ArcaneOnyx.MeshGizmos
         {
             if (string.IsNullOrEmpty(text) || font == null) return null;
 
-            string key = size.ToString("0.###") + ":" + text;
-            if (cache.TryGetValue(key, out var cached) && cached != null) return cached;
+            string key = font.GetInstanceID() + ":" + size.ToString("0.###") + ":" + text;
+            if (cache.TryGetValue(key, out var cached) && cached.Mesh != null) return cached.Mesh;
 
             //make sure every glyph we need is in the atlas before we read its UVs
             font.RequestCharactersInTexture(text, RenderFontSize, FontStyle.Normal);
@@ -100,8 +122,8 @@ namespace ArcaneOnyx.MeshGizmos
             mesh.SetTriangles(triangles, 0);
             mesh.RecalculateBounds();
 
-            if (cache.Count >= MaxCacheSize) ClearCache();
-            cache[key] = mesh;
+            if (cache.Count >= MaxCacheSize) Invalidate(null);
+            cache[key] = new Entry(mesh, font);
             return mesh;
         }
 
@@ -119,19 +141,68 @@ namespace ArcaneOnyx.MeshGizmos
             return width;
         }
 
-        private static void OnFontTextureRebuilt(Font font) => ClearCache();
+        private static void OnFontTextureRebuilt(Font font) => Invalidate(font);
 
-        private static void ClearCache()
+        //Drops the cached meshes of one font, or of every font when none is given. Unity raises
+        //textureRebuilt from wherever the atlas happened to grow, which includes Canvas rendering, where
+        //DestroyImmediate is illegal - so nothing is destroyed here, only retired.
+        private static void Invalidate(Font font)
         {
-            foreach (var mesh in cache.Values) DestroyMesh(mesh);
-            cache.Clear();
+            keyScratch.Clear();
+
+            foreach (var pair in cache)
+            {
+                if (ReferenceEquals(font, null) || ReferenceEquals(pair.Value.Font, font)) keyScratch.Add(pair.Key);
+            }
+
+            if (keyScratch.Count == 0) return;
+
+            for (int i = 0; i < keyScratch.Count; i++)
+            {
+                Retire(cache[keyScratch[i]].Mesh);
+                cache.Remove(keyScratch[i]);
+            }
+
+            keyScratch.Clear();
+            Version++;
         }
 
-        private static void DestroyMesh(Mesh mesh)
+        private static void Retire(Mesh mesh)
         {
             if (mesh == null) return;
-            if (Application.isPlaying) Object.Destroy(mesh);
-            else Object.DestroyImmediate(mesh);
+
+            if (Application.isPlaying)
+            {
+                Object.Destroy(mesh);
+                return;
+            }
+
+#if UNITY_EDITOR
+            //Destroy is not available in edit mode and DestroyImmediate is not legal from every caller,
+            //so the mesh waits for the editor loop
+            retired.Add(mesh);
+            if (destroyScheduled) return;
+
+            destroyScheduled = true;
+            UnityEditor.EditorApplication.delayCall += DestroyRetired;
+#endif
         }
+
+#if UNITY_EDITOR
+        private static void DestroyRetired()
+        {
+            destroyScheduled = false;
+
+            for (int i = 0; i < retired.Count; i++)
+            {
+                if (retired[i] == null) continue;
+
+                if (Application.isPlaying) Object.Destroy(retired[i]);
+                else Object.DestroyImmediate(retired[i]);
+            }
+
+            retired.Clear();
+        }
+#endif
     }
 }

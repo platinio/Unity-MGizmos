@@ -49,8 +49,8 @@ namespace ArcaneOnyx.MeshGizmos
             {
                 unchecked
                 {
-                    int hash = Mesh != null ? Mesh.GetInstanceID() : 0;
-                    hash = (hash * 397) ^ (Material != null ? Material.GetInstanceID() : 0);
+                    int hash = Mesh != null ? Mesh.GetHashCode() : 0;
+                    hash = (hash * 397) ^ (Material != null ? Material.GetHashCode() : 0);
                     hash = (hash * 397) ^ (int) ShadowCastingMode;
                     hash = (hash * 397) ^ (ReceiveShadows ? 1 : 0);
                     return hash;

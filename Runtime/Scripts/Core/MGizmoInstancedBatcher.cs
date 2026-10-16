@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -49,8 +50,8 @@ namespace ArcaneOnyx.MeshGizmos
             {
                 unchecked
                 {
-                    int hash = Mesh != null ? Mesh.GetInstanceID() : 0;
-                    hash = (hash * 397) ^ (Material != null ? Material.GetInstanceID() : 0);
+                    int hash = RuntimeHelpers.GetHashCode(Mesh);
+                    hash = (hash * 397) ^ RuntimeHelpers.GetHashCode(Material);
                     hash = (hash * 397) ^ (int) ShadowCastingMode;
                     hash = (hash * 397) ^ (ReceiveShadows ? 1 : 0);
                     return hash;

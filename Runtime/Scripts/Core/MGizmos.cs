@@ -9,7 +9,7 @@ using UnityEngine.SceneManagement;
 
 namespace ArcaneOnyx.MeshGizmos
 {
-    public static class MGizmos
+    public static partial class MGizmos
     {
         public static MGizmosRendererConfig Config => MGizmosRendererConfig.Instance;
         private static Dictionary<Camera, List<MGizmoBaseDrawCall>> meshDrawCalls = new();

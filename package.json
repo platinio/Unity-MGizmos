@@ -1,7 +1,7 @@
 {
   "name": "com.arcaneonyx.mgizmos",
   "displayName": "MGizmos",
-  "version": "1.22.0",
+  "version": "1.23.0",
   "unity": "6000.0",
   "description": "Runtime debug rendering: shapes, outlines, lines, arrows, text and physics visualizations drawn in the Scene view, the Game view and, with SHOW_MESH_GIZMOS_IN_BUILD, in builds.",
   "author": {

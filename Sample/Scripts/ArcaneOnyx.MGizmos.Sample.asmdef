@@ -1,0 +1,16 @@
+{
+    "name": "ArcaneOnyx.MGizmos.Sample",
+    "rootNamespace": "",
+    "references": [
+        "ArcaneOnyx.MGizmos"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

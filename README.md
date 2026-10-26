@@ -52,6 +52,11 @@ MPhysics.Raycast(ray);
 
 Import [This](https://github.com/platinio/Unity-MGizmos/releases/latest/download/MGizmos.unitypackage) Unity package into your project.
 
+Or install it as a package: the repository root is a UPM package named `com.arcaneonyx.mgizmos`, so it
+can be added through the Package Manager by git URL, or cloned (or added as a git submodule) into a
+project's `Packages/` folder. Another package can then compile code only when MGizmos is present with
+a `versionDefines` entry on `com.arcaneonyx.mgizmos`.
+
 # Getting Started
 
 ```csharp
@@ -134,6 +139,21 @@ arithmetic everyone visualizing a value field gets wrong once. A negative height
 ```csharp
 MGizmos.RenderBar(basePosition, height, width);
 ```
+
+# Wire Shapes
+
+Outlines of the volumes a physics engine collides with, so the collision shape can be compared with
+the mesh it stands for. Every line has the given width; a solid primitive would hide the object.
+
+```csharp
+MGizmos.RenderWireCube(center, rotation, size, lineWidth);
+MGizmos.RenderWireSphere(center, rotation, radius, lineWidth);
+MGizmos.RenderWireCylinder(center, rotation, radius, height, lineWidth);   // along the rotated Y axis
+MGizmos.RenderWireCapsule(bottomCenter, topCenter, radius, lineWidth);
+MGizmos.RenderWireCapsule(bottomCenter, topCenter, bottomRadius, topRadius, lineWidth); // tapered
+```
+
+The capsule's centres are those of its two end spheres.
 
 # Retained pictures: MGizmoGroup
 

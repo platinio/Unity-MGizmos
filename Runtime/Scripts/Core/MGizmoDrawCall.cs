@@ -138,7 +138,9 @@ namespace ArcaneOnyx.MeshGizmos
                 return;
             }
 
-            if (camera == null || material == null)
+            //a mesh destroyed after the call was made (a disposed MGizmoBatch) has nothing left to draw, so the
+            //call is dropped now instead of handing a dead mesh to the renderer for its remaining duration
+            if (camera == null || material == null || mesh == null)
             {
                 duration = float.MinValue;
                 return;

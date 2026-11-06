@@ -592,25 +592,40 @@ namespace ArcaneOnyx.MeshGizmos
         public static MGizmoBaseDrawCall RenderBatch(MGizmoBatch batch)
         {
             if (!IsEnable) return inertDrawCall;
-            if (Config == null || Config.VertexColorMaterial == null) return inertDrawCall;
+            if (Config == null) return inertDrawCall;
+            if (Config.VertexColorMaterial == null)
+            {
+                WarnOnceThatBatchesHaveNoMaterial();
+                return inertDrawCall;
+            }
+
             if (batch == null || batch.IsEmpty) return inertDrawCall;
 
             batch.UploadChanges();
 
             var compositeMeshDrawCall = MGizmoCompositeDrawCall.Get();
-            if (batch.LineCount > 0)
-            {
-                compositeMeshDrawCall.AddDrawCall(MGizmoDrawCall.Get(batch.LineMesh, Vector3.zero, Quaternion.identity, Vector3.one));
-            }
-
-            if (batch.TriangleCount > 0)
-            {
-                compositeMeshDrawCall.AddDrawCall(MGizmoDrawCall.Get(batch.TriangleMesh, Vector3.zero, Quaternion.identity, Vector3.one));
-            }
+            if (batch.LineCount > 0) compositeMeshDrawCall.AddDrawCall(WorldSpaceDrawCall(batch.LineMesh));
+            if (batch.TriangleCount > 0) compositeMeshDrawCall.AddDrawCall(WorldSpaceDrawCall(batch.TriangleMesh));
 
             InitializeMeshDrawCall(compositeMeshDrawCall);
             compositeMeshDrawCall.SetMaterial(Config.VertexColorMaterial).SetColor(Color.white);
             return compositeMeshDrawCall;
+        }
+
+        //A batch's vertices are already in world space, so its meshes draw with no transform of their own.
+        private static MGizmoDrawCall WorldSpaceDrawCall(Mesh mesh)
+        {
+            return MGizmoDrawCall.Get(mesh, Vector3.zero, Quaternion.identity, Vector3.one);
+        }
+
+        private static bool hasWarnedThatBatchesHaveNoMaterial;
+
+        private static void WarnOnceThatBatchesHaveNoMaterial()
+        {
+            if (hasWarnedThatBatchesHaveNoMaterial) return;
+
+            hasWarnedThatBatchesHaveNoMaterial = true;
+            Debug.LogWarning("MGizmos.RenderBatch draws nothing: the MGizmosRendererConfig in use has no Vertex Color Material. Set it to VertexColorMaterial, shipped in the package's Runtime/Material folder.", Config);
         }
 
         public static MGizmoBaseDrawCall RenderText(Vector3 position, string text) => RenderText(position, text, 0.25f);

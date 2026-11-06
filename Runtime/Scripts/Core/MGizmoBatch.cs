@@ -9,22 +9,22 @@ namespace ArcaneOnyx.MeshGizmos
     /// </summary>
     /// <remarks>
     /// <para>
-    /// A per-element gizmo costs a draw call and a pooled object; a physics engine's debug picture is tens
-    /// of thousands of segments a frame. A batch keeps its vertex lists between frames, so refilling it
-    /// allocates nothing once it has grown to the picture's size, and it uploads only when its contents
-    /// changed. Lines are one pixel wide (a lines mesh); the per-element <c>RenderLine</c> keeps its width.
+    /// Refilling allocates nothing once the batch has grown to the picture's size. Lines are one pixel wide
+    /// (a lines mesh); the per-element <c>RenderLine</c> keeps its width.
     /// </para>
     /// <para>
-    /// The draw call <see cref="MGizmos.RenderBatch"/> returns shows the batch as it is when drawn, so a
-    /// batch that is cleared and refilled every frame needs nothing more; a timed picture that must outlive
-    /// the next refill wants its own batch. Dispose the batch when its owner goes away: it owns two meshes.
+    /// <see cref="MGizmos.RenderBatch"/> uploads whatever was added or cleared since the last call, and every
+    /// draw call holding the batch shows it as of that latest upload. A batch cleared, refilled and rendered
+    /// every frame needs nothing more; a timed picture that must outlive the next refill wants its own batch.
+    /// Dispose the batch when its owner goes away: it owns two meshes, and a draw call still holding one
+    /// draws nothing from then on.
     /// </para>
     /// </remarks>
     public sealed class MGizmoBatch : System.IDisposable
     {
-        private readonly Part lines = new("MGizmoBatch Lines", MeshTopology.Lines);
+        private readonly BatchMesh lines = new("MGizmoBatch Lines", MeshTopology.Lines, verticesPerElement: 2);
 
-        private readonly Part triangles = new("MGizmoBatch Triangles", MeshTopology.Triangles);
+        private readonly BatchMesh triangles = new("MGizmoBatch Triangles", MeshTopology.Triangles, verticesPerElement: 3);
 
         public int LineCount => lines.ElementCount;
 
@@ -67,16 +67,16 @@ namespace ArcaneOnyx.MeshGizmos
             triangles.UploadChanges();
         }
 
-        //One mesh per topology: a draw call renders a single submesh, and lines and triangles cannot share one.
-        //Plain arrays rather than lists: a debug picture adds hundreds of thousands of vertices a frame, and
-        //no vertex is shared, so vertex i is always index i and the index buffer is a count-up kept between frames.
-        private sealed class Part
+        //No vertex is shared, so vertex i is always index i and the index buffer is a count-up kept between frames.
+        private sealed class BatchMesh
         {
             private const int InitialCapacity = 1024;
 
             private readonly string meshName;
 
             private readonly MeshTopology topology;
+
+            private readonly int verticesPerElement;
 
             private Vector3[] vertices = new Vector3[InitialCapacity];
 
@@ -86,23 +86,26 @@ namespace ArcaneOnyx.MeshGizmos
 
             private int vertexCount;
 
-            private bool hasChanged;
+            private Vector3 lowestCorner;
 
-            public Part(string meshName, MeshTopology topology)
+            private Vector3 highestCorner;
+
+            private bool hasChangesToUpload;
+
+            public BatchMesh(string meshName, MeshTopology topology, int verticesPerElement)
             {
                 this.meshName = meshName;
                 this.topology = topology;
+                this.verticesPerElement = verticesPerElement;
             }
 
             public Mesh Mesh { get; private set; }
 
-            public int ElementCount => vertexCount / VerticesPerElement;
-
-            private int VerticesPerElement => topology == MeshTopology.Lines ? 2 : 3;
+            public int ElementCount => vertexCount / verticesPerElement;
 
             public void Clear()
             {
-                hasChanged |= vertexCount > 0;
+                hasChangesToUpload |= vertexCount > 0;
                 vertexCount = 0;
             }
 
@@ -114,25 +117,31 @@ namespace ArcaneOnyx.MeshGizmos
                     System.Array.Resize(ref colors, colors.Length * 2);
                 }
 
+                StretchBoundsOver(position);
                 vertices[vertexCount] = position;
                 colors[vertexCount] = color;
                 vertexCount++;
-                hasChanged = true;
+                hasChangesToUpload = true;
             }
 
             public void UploadChanges()
             {
-                if (!hasChanged)
+                if (!hasChangesToUpload)
                 {
                     return;
                 }
 
-                hasChanged = false;
-                Mesh ??= CreateMesh();
+                hasChangesToUpload = false;
+                if (Mesh == null)
+                {
+                    Mesh = CreateMesh();
+                }
+
                 Mesh.Clear();
                 Mesh.SetVertices(vertices, 0, vertexCount);
                 Mesh.SetColors(colors, 0, vertexCount);
-                Mesh.SetIndices(CountingIndicesUpTo(vertexCount), 0, vertexCount, topology, 0);
+                Mesh.SetIndices(CountingIndicesUpTo(vertexCount), 0, vertexCount, topology, 0, calculateBounds: false);
+                Mesh.bounds = vertexCount > 0 ? new Bounds((lowestCorner + highestCorner) * 0.5f, highestCorner - lowestCorner) : default;
             }
 
             public void Dispose()
@@ -152,6 +161,20 @@ namespace ArcaneOnyx.MeshGizmos
                 }
 
                 Mesh = null;
+            }
+
+            //Kept while filling, so the upload does not walk every vertex a second time for the bounds.
+            private void StretchBoundsOver(Vector3 position)
+            {
+                if (vertexCount == 0)
+                {
+                    lowestCorner = position;
+                    highestCorner = position;
+                    return;
+                }
+
+                lowestCorner = Vector3.Min(lowestCorner, position);
+                highestCorner = Vector3.Max(highestCorner, position);
             }
 
             private int[] CountingIndicesUpTo(int count)

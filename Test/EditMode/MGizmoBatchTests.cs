@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using UnityEngine;
+using UnityEngine.TestTools.Constraints;
+using Is = UnityEngine.TestTools.Constraints.Is;
 
 namespace ArcaneOnyx.MeshGizmos.Tests
 {
@@ -25,7 +27,7 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         }
 
         [Test]
-        public void AddedLinesAndTriangles_AreCounted_AndClearEmptiesTheBatch()
+        public void AddedLinesAndTriangles_AreCounted()
         {
             batch.AddLine(Vector3.zero, Vector3.up, Red);
             batch.AddLine(Vector3.zero, Vector3.right, Red);
@@ -33,6 +35,13 @@ namespace ArcaneOnyx.MeshGizmos.Tests
 
             Assert.AreEqual(2, batch.LineCount);
             Assert.AreEqual(1, batch.TriangleCount);
+        }
+
+        [Test]
+        public void Clearing_EmptiesTheBatch()
+        {
+            batch.AddLine(Vector3.zero, Vector3.up, Red);
+            batch.AddTriangle(Vector3.zero, Vector3.up, Vector3.right, Blue);
 
             batch.Clear();
 
@@ -144,6 +153,84 @@ namespace ArcaneOnyx.MeshGizmos.Tests
             batch.Dispose();
 
             Assert.IsTrue(mesh == null, "the batch owns its meshes and must not leak them");
+        }
+
+        [Test]
+        public void RenderingAnUnchangedBatchAgain_UploadsNothing()
+        {
+            batch.AddLine(Vector3.zero, Vector3.up, Red);
+            var mesh = MeshesOf(MGizmos.RenderBatch(batch))[0];
+            var sentinel = new[] { Vector3.one * 7f, Vector3.one * 8f };
+            mesh.vertices = sentinel;
+
+            MGizmos.RenderBatch(batch);
+
+            CollectionAssert.AreEqual(sentinel, mesh.vertices, "an upload would have overwritten the sentinel");
+        }
+
+        [Test]
+        public void RefillingABatchThatHasGrown_AllocatesNothing()
+        {
+            FillWithLines(2000);
+            MGizmos.RenderBatch(batch);
+
+            Assert.That(() =>
+            {
+                batch.Clear();
+                FillWithLines(2000);
+            }, Is.Not.AllocatingGCMemory());
+        }
+
+        [Test]
+        public void SetColor_TintsTheWholeBatch()
+        {
+            batch.AddLine(Vector3.zero, Vector3.up, Red);
+            batch.AddTriangle(Vector3.zero, Vector3.up, Vector3.right, Blue);
+
+            var drawCall = MGizmos.RenderBatch(batch).SetColor(Color.green);
+
+            foreach (var part in PartsOf(drawCall))
+            {
+                Assert.AreEqual(Color.green, DrawCallProbe.Read<Color>(part, "color"));
+            }
+        }
+
+        [Test]
+        public void ATimedPictureOfADisposedBatch_IsDroppedAtTheNextCameraPass()
+        {
+            var cameraObject = new GameObject("Batch Test Camera");
+            var camera = cameraObject.AddComponent<Camera>();
+            try
+            {
+                MGizmos.HandleCameraDrawCalls(camera, 0f);
+                batch.AddLine(Vector3.zero, Vector3.up, Red);
+                MGizmos.AddMeshDrawCall(MGizmos.RenderBatch(batch).SetDuration(5f));
+
+                batch.Dispose();
+
+                Assert.DoesNotThrow(() => MGizmos.HandleCameraDrawCalls(camera, 0.1f));
+                Assert.AreEqual(0, DrawCallsOf(camera).Count, "a call whose mesh is gone must leave the camera rather than draw a destroyed mesh for its remaining seconds");
+            }
+            finally
+            {
+                MGizmos.RemoveRenderCamera(camera);
+                Object.DestroyImmediate(cameraObject);
+            }
+        }
+
+        private static List<MGizmoBaseDrawCall> DrawCallsOf(Camera camera)
+        {
+            var field = typeof(MGizmos).GetField("meshDrawCalls", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+            var drawCallsByCamera = (Dictionary<Camera, List<MGizmoBaseDrawCall>>)field.GetValue(null);
+            return drawCallsByCamera[camera];
+        }
+
+        private void FillWithLines(int lineCount)
+        {
+            for (var line = 0; line < lineCount; line++)
+            {
+                batch.AddLine(new Vector3(line, 0f, 0f), new Vector3(line, 1f, 0f), Red);
+            }
         }
 
         private static List<MGizmoBaseDrawCall> PartsOf(MGizmoBaseDrawCall drawCall)

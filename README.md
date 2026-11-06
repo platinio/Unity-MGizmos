@@ -229,11 +229,17 @@ private void OnDestroy() => batch.Dispose();
 
 - Each line and triangle keeps its own colour; `SetColor` on the returned draw call tints the whole batch.
 - Lines are one pixel wide. Use `RenderLine` when a line needs a width.
-- Refilling allocates nothing once the batch has grown to the picture's size, and the meshes upload only
-  when the contents changed.
-- The draw call shows the batch as it is when drawn: give a timed picture its own batch.
+- Refilling allocates nothing once the batch has grown to the picture's size.
+- `RenderBatch` uploads whatever was added or cleared since the last `RenderBatch`, and every draw call
+  holding the batch shows it as of that latest upload: give a timed picture that must outlive the next
+  refill its own batch.
+- Dispose the batch when its owner goes away; it owns two meshes, and a draw call still holding one is
+  dropped at the next camera pass.
 - The material is `VertexColorMaterial` (shader `ArcaneOnyx/MGizmos/Vertex Color Unlit`), set on the
-  renderer config. Dispose the batch when its owner goes away; it owns two meshes.
+  renderer config; without it `RenderBatch` draws nothing and warns once. The shader pulls each vertex
+  toward the camera by 0.2 % of its distance (`_DepthPullTowardCamera`), so a wireframe on a mesh does not
+  fight it for depth; something thinner than that shows its hidden edges through itself. Triangles drawn
+  translucent are not sorted.
 
 # Primitive Meshes
 

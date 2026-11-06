@@ -612,7 +612,6 @@ namespace ArcaneOnyx.MeshGizmos
             return compositeMeshDrawCall;
         }
 
-        //A batch's vertices are already in world space, so its meshes draw with no transform of their own.
         private static MGizmoDrawCall WorldSpaceDrawCall(Mesh mesh)
         {
             return MGizmoDrawCall.Get(mesh, Vector3.zero, Quaternion.identity, Vector3.one);

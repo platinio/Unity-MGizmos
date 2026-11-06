@@ -236,7 +236,8 @@ private void OnDestroy() => batch.Dispose();
 - Dispose the batch when its owner goes away; it owns two meshes, and a draw call still holding one is
   dropped at the next camera pass.
 - The material is `VertexColorMaterial` (shader `ArcaneOnyx/MGizmos/Vertex Color Unlit`), set on the
-  renderer config; without it `RenderBatch` draws nothing and warns once. The shader pulls each vertex
+  renderer config; without it `RenderBatch` draws nothing and warns once. Like the default material it
+  renders in the built-in pipeline and in URP and HDRP. The shader pulls each vertex
   toward the camera by 0.2 % of its distance (`_DepthPullTowardCamera`), so a wireframe on a mesh does not
   fight it for depth; something thinner than that shows its hidden edges through itself. Triangles drawn
   translucent are not sorted.

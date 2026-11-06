@@ -156,6 +156,20 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         }
 
         [Test]
+        public void TheUploadedBounds_HoldEveryLine_SoTheBatchIsNotCulledWhileOnScreen()
+        {
+            batch.AddLine(new Vector3(1f, 2f, 3f), new Vector3(4f, 5f, 6f), Red);
+            MGizmos.RenderBatch(batch);
+            batch.Clear();
+            batch.AddLine(Vector3.zero, Vector3.right, Red);
+
+            var mesh = MeshesOf(MGizmos.RenderBatch(batch))[0];
+
+            Assert.AreEqual(Vector3.zero, mesh.bounds.min);
+            Assert.AreEqual(Vector3.right, mesh.bounds.max);
+        }
+
+        [Test]
         public void RenderingAnUnchangedBatchAgain_UploadsNothing()
         {
             batch.AddLine(Vector3.zero, Vector3.up, Red);
@@ -209,20 +223,13 @@ namespace ArcaneOnyx.MeshGizmos.Tests
                 batch.Dispose();
 
                 Assert.DoesNotThrow(() => MGizmos.HandleCameraDrawCalls(camera, 0.1f));
-                Assert.AreEqual(0, DrawCallsOf(camera).Count, "a call whose mesh is gone must leave the camera rather than draw a destroyed mesh for its remaining seconds");
+                Assert.AreEqual(0, DrawCallProbe.DrawCallsOf(camera).Count, "a call whose mesh is gone must leave the camera rather than draw a destroyed mesh for its remaining seconds");
             }
             finally
             {
                 MGizmos.RemoveRenderCamera(camera);
                 Object.DestroyImmediate(cameraObject);
             }
-        }
-
-        private static List<MGizmoBaseDrawCall> DrawCallsOf(Camera camera)
-        {
-            var field = typeof(MGizmos).GetField("meshDrawCalls", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
-            var drawCallsByCamera = (Dictionary<Camera, List<MGizmoBaseDrawCall>>)field.GetValue(null);
-            return drawCallsByCamera[camera];
         }
 
         private void FillWithLines(int lineCount)

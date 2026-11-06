@@ -86,10 +86,6 @@ namespace ArcaneOnyx.MeshGizmos
 
             private int vertexCount;
 
-            private Vector3 lowestCorner;
-
-            private Vector3 highestCorner;
-
             private bool hasChangesToUpload;
 
             public BatchMesh(string meshName, MeshTopology topology, int verticesPerElement)
@@ -117,7 +113,6 @@ namespace ArcaneOnyx.MeshGizmos
                     System.Array.Resize(ref colors, colors.Length * 2);
                 }
 
-                StretchBoundsOver(position);
                 vertices[vertexCount] = position;
                 colors[vertexCount] = color;
                 vertexCount++;
@@ -140,8 +135,7 @@ namespace ArcaneOnyx.MeshGizmos
                 Mesh.Clear();
                 Mesh.SetVertices(vertices, 0, vertexCount);
                 Mesh.SetColors(colors, 0, vertexCount);
-                Mesh.SetIndices(CountingIndicesUpTo(vertexCount), 0, vertexCount, topology, 0, calculateBounds: false);
-                Mesh.bounds = vertexCount > 0 ? new Bounds((lowestCorner + highestCorner) * 0.5f, highestCorner - lowestCorner) : default;
+                Mesh.SetIndices(CountingIndicesUpTo(vertexCount), 0, vertexCount, topology, 0);
             }
 
             public void Dispose()
@@ -161,20 +155,6 @@ namespace ArcaneOnyx.MeshGizmos
                 }
 
                 Mesh = null;
-            }
-
-            //Kept while filling, so the upload does not walk every vertex a second time for the bounds.
-            private void StretchBoundsOver(Vector3 position)
-            {
-                if (vertexCount == 0)
-                {
-                    lowestCorner = position;
-                    highestCorner = position;
-                    return;
-                }
-
-                lowestCorner = Vector3.Min(lowestCorner, position);
-                highestCorner = Vector3.Max(highestCorner, position);
             }
 
             private int[] CountingIndicesUpTo(int count)

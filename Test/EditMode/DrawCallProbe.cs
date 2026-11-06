@@ -33,6 +33,17 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         internal static Mesh MeshOf(object drawCall) => Read<Mesh>(drawCall, "mesh");
 
         /// <summary>
+        /// The timed draw calls MGizmos keeps for a camera between its passes.
+        /// </summary>
+        internal static System.Collections.Generic.List<MGizmoBaseDrawCall> DrawCallsOf(Camera camera)
+        {
+            var field = typeof(MGizmos).GetField("meshDrawCalls", BindingFlags.NonPublic | BindingFlags.Static);
+            Assert.IsNotNull(field, "field 'meshDrawCalls' not found on MGizmos");
+            var drawCallsByCamera = (System.Collections.Generic.Dictionary<Camera, System.Collections.Generic.List<MGizmoBaseDrawCall>>)field.GetValue(null);
+            return drawCallsByCamera[camera];
+        }
+
+        /// <summary>
         /// The local-to-world transform the draw call will render with, for asserting where mesh-local
         /// points actually land in the world.
         /// </summary>

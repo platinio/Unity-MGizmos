@@ -138,7 +138,9 @@ namespace ArcaneOnyx.MeshGizmos
                 return;
             }
 
-            if (camera == null || material == null)
+            //a mesh destroyed after the call was made has nothing left to draw: drop the call instead of keeping
+            //it for its remaining duration
+            if (camera == null || material == null || mesh == null)
             {
                 duration = float.MinValue;
                 return;

@@ -204,13 +204,44 @@ MGizmos.RenderMesh(mesh, position, rotation, scale);
 ```
 ![alt text](https://github.com/platinio/Unity-MGizmos/blob/main/ReadmeResources/meshExample.png?raw=true)
 
+# Many lines and triangles at once: MGizmoBatch
+
+For pictures of thousands of elements (a physics engine's debug view, a navigation mesh, a point cloud
+of rays), one draw call per line is too many. Fill an `MGizmoBatch` with coloured lines and triangles and
+draw it as two meshes:
+
+```csharp
+private readonly MGizmoBatch batch = new();
+
+private void Update()
+{
+    batch.Clear();
+    foreach (var edge in edges)
+    {
+        batch.AddLine(edge.From, edge.To, edge.Color);
+    }
+
+    MGizmos.AddMeshDrawCall(MGizmos.RenderBatch(batch));
+}
+
+private void OnDestroy() => batch.Dispose();
+```
+
+- Each line and triangle keeps its own colour; `SetColor` on the returned draw call tints the whole batch.
+- Lines are one pixel wide. Use `RenderLine` when a line needs a width.
+- Refilling allocates nothing once the batch has grown to the picture's size, and the meshes upload only
+  when the contents changed.
+- The draw call shows the batch as it is when drawn: give a timed picture its own batch.
+- The material is `VertexColorMaterial` (shader `ArcaneOnyx/MGizmos/Vertex Color Unlit`), set on the
+  renderer config. Dispose the batch when its owner goes away; it owns two meshes.
+
 # Primitive Meshes
 
 MGizmos ships **no mesh assets**. Every primitive it draws — sphere, cube, cylinder, quad, cone (the
 arrowhead) and disc — is generated in code on first use and cached for the session. Nothing to import,
 nothing to wire up, and no references into Unity's built-in resource library to go stale between editor
-versions. The renderer config asset now carries only the default material, the default color and the text
-font.
+versions. The renderer config asset now carries only the default material, the batch's vertex-colour material,
+the default color and the text font.
 
 The primitives keep Unity's own conventions, which matters if you compose transforms yourself:
 

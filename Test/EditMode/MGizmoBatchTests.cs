@@ -1,0 +1,143 @@
+using System.Collections.Generic;
+using NUnit.Framework;
+using UnityEngine;
+
+namespace ArcaneOnyx.MeshGizmos.Tests
+{
+    public class MGizmoBatchTests
+    {
+        private static readonly Color32 Red = new(255, 0, 0, 255);
+
+        private static readonly Color32 Blue = new(0, 0, 255, 255);
+
+        private MGizmoBatch batch;
+
+        [SetUp]
+        public void SetUp()
+        {
+            batch = new MGizmoBatch();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            batch.Dispose();
+        }
+
+        [Test]
+        public void AddedLinesAndTriangles_AreCounted_AndClearEmptiesTheBatch()
+        {
+            batch.AddLine(Vector3.zero, Vector3.up, Red);
+            batch.AddLine(Vector3.zero, Vector3.right, Red);
+            batch.AddTriangle(Vector3.zero, Vector3.up, Vector3.right, Blue);
+
+            Assert.AreEqual(2, batch.LineCount);
+            Assert.AreEqual(1, batch.TriangleCount);
+
+            batch.Clear();
+
+            Assert.IsTrue(batch.IsEmpty);
+        }
+
+        [Test]
+        public void AnEmptyBatch_RendersNothing()
+        {
+            using var group = new MGizmoGroup();
+
+            group.Add(MGizmos.RenderBatch(batch));
+
+            Assert.AreEqual(0, group.Count, "an empty batch must hand back the inert draw call, which a group ignores");
+        }
+
+        [Test]
+        public void RenderingALine_UploadsItAsALinesMesh_WithItsVertexColour()
+        {
+            batch.AddLine(new Vector3(1f, 2f, 3f), new Vector3(4f, 5f, 6f), Red);
+
+            var mesh = MeshesOf(MGizmos.RenderBatch(batch))[0];
+
+            Assert.AreEqual(MeshTopology.Lines, mesh.GetTopology(0));
+            CollectionAssert.AreEqual(new[] { new Vector3(1f, 2f, 3f), new Vector3(4f, 5f, 6f) }, mesh.vertices);
+            CollectionAssert.AreEqual(new[] { Red, Red }, mesh.colors32);
+        }
+
+        [Test]
+        public void RenderingATriangle_UploadsItAsATrianglesMesh()
+        {
+            batch.AddTriangle(Vector3.zero, Vector3.up, Vector3.right, Blue);
+
+            var mesh = MeshesOf(MGizmos.RenderBatch(batch))[0];
+
+            Assert.AreEqual(MeshTopology.Triangles, mesh.GetTopology(0));
+            CollectionAssert.AreEqual(new[] { 0, 1, 2 }, mesh.GetIndices(0));
+            CollectionAssert.AreEqual(new[] { Blue, Blue, Blue }, mesh.colors32);
+        }
+
+        [Test]
+        public void TheDrawCall_UsesTheVertexColourMaterial_TintedWhite()
+        {
+            batch.AddLine(Vector3.zero, Vector3.up, Red);
+            batch.AddTriangle(Vector3.zero, Vector3.up, Vector3.right, Blue);
+
+            var drawCall = MGizmos.RenderBatch(batch);
+
+            var parts = PartsOf(drawCall);
+            Assert.AreEqual(2, parts.Count, "one draw for the lines, one for the triangles");
+            foreach (var part in parts)
+            {
+                Assert.AreSame(MGizmos.Config.VertexColorMaterial, DrawCallProbe.Read<Material>(part, "material"));
+                Assert.AreEqual(Color.white, DrawCallProbe.Read<Color>(part, "color"), "a tint other than white would recolour every vertex");
+            }
+        }
+
+        [Test]
+        public void ABatchRefilledAfterRendering_UploadsItsNewContents()
+        {
+            batch.AddLine(Vector3.zero, Vector3.up, Red);
+            MGizmos.RenderBatch(batch);
+
+            batch.Clear();
+            batch.AddLine(Vector3.zero, Vector3.forward, Blue);
+            batch.AddLine(Vector3.zero, Vector3.back, Blue);
+            var mesh = MeshesOf(MGizmos.RenderBatch(batch))[0];
+
+            Assert.AreEqual(4, mesh.vertexCount);
+            Assert.AreEqual(Vector3.forward, mesh.vertices[1]);
+        }
+
+        [Test]
+        public void ABatchPastSixteenBitIndices_KeepsEveryLine()
+        {
+            const int lineCount = 40000;
+            for (var line = 0; line < lineCount; line++)
+            {
+                batch.AddLine(new Vector3(line, 0f, 0f), new Vector3(line, 1f, 0f), Red);
+            }
+
+            var mesh = MeshesOf(MGizmos.RenderBatch(batch))[0];
+
+            Assert.AreEqual(lineCount * 2, mesh.GetIndices(0).Length);
+        }
+
+        [Test]
+        public void DisposingTheBatch_DestroysItsMeshes()
+        {
+            batch.AddLine(Vector3.zero, Vector3.up, Red);
+            var mesh = MeshesOf(MGizmos.RenderBatch(batch))[0];
+
+            batch.Dispose();
+
+            Assert.IsTrue(mesh == null, "the batch owns its meshes and must not leak them");
+        }
+
+        private static List<MGizmoBaseDrawCall> PartsOf(MGizmoBaseDrawCall drawCall)
+        {
+            return DrawCallProbe.Read<List<MGizmoBaseDrawCall>>(drawCall, "drawCalls");
+        }
+
+        private static List<Mesh> MeshesOf(MGizmoBaseDrawCall drawCall)
+        {
+            return PartsOf(drawCall).ConvertAll(part => DrawCallProbe.MeshOf(part));
+        }
+    }
+}

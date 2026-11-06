@@ -587,6 +587,32 @@ namespace ArcaneOnyx.MeshGizmos
             return compositeMeshDrawCall;
         }
 
+        //Draws every line and triangle of the batch in its own colour, with two draw calls at most. The
+        //returned call is tinted white so the vertex colours show as they are; SetColor tints the whole batch.
+        public static MGizmoBaseDrawCall RenderBatch(MGizmoBatch batch)
+        {
+            if (!IsEnable) return inertDrawCall;
+            if (Config == null || Config.VertexColorMaterial == null) return inertDrawCall;
+            if (batch == null || batch.IsEmpty) return inertDrawCall;
+
+            batch.UploadChanges();
+
+            var compositeMeshDrawCall = MGizmoCompositeDrawCall.Get();
+            if (batch.LineCount > 0)
+            {
+                compositeMeshDrawCall.AddDrawCall(MGizmoDrawCall.Get(batch.LineMesh, Vector3.zero, Quaternion.identity, Vector3.one));
+            }
+
+            if (batch.TriangleCount > 0)
+            {
+                compositeMeshDrawCall.AddDrawCall(MGizmoDrawCall.Get(batch.TriangleMesh, Vector3.zero, Quaternion.identity, Vector3.one));
+            }
+
+            InitializeMeshDrawCall(compositeMeshDrawCall);
+            compositeMeshDrawCall.SetMaterial(Config.VertexColorMaterial).SetColor(Color.white);
+            return compositeMeshDrawCall;
+        }
+
         public static MGizmoBaseDrawCall RenderText(Vector3 position, string text) => RenderText(position, text, 0.25f);
 
         //Draws a text label. size is roughly the world height of a capital letter. When billboard is true

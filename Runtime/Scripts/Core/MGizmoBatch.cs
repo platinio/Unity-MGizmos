@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -69,17 +68,23 @@ namespace ArcaneOnyx.MeshGizmos
         }
 
         //One mesh per topology: a draw call renders a single submesh, and lines and triangles cannot share one.
+        //Plain arrays rather than lists: a debug picture adds hundreds of thousands of vertices a frame, and
+        //no vertex is shared, so vertex i is always index i and the index buffer is a count-up kept between frames.
         private sealed class Part
         {
-            private readonly List<Vector3> vertices = new();
-
-            private readonly List<Color32> colors = new();
-
-            private readonly List<int> indices = new();
+            private const int InitialCapacity = 1024;
 
             private readonly string meshName;
 
             private readonly MeshTopology topology;
+
+            private Vector3[] vertices = new Vector3[InitialCapacity];
+
+            private Color32[] colors = new Color32[InitialCapacity];
+
+            private int[] countingIndices = System.Array.Empty<int>();
+
+            private int vertexCount;
 
             private bool hasChanged;
 
@@ -91,23 +96,27 @@ namespace ArcaneOnyx.MeshGizmos
 
             public Mesh Mesh { get; private set; }
 
-            public int ElementCount => indices.Count / VerticesPerElement;
+            public int ElementCount => vertexCount / VerticesPerElement;
 
             private int VerticesPerElement => topology == MeshTopology.Lines ? 2 : 3;
 
             public void Clear()
             {
-                hasChanged |= indices.Count > 0;
-                vertices.Clear();
-                colors.Clear();
-                indices.Clear();
+                hasChanged |= vertexCount > 0;
+                vertexCount = 0;
             }
 
             public void AddVertex(Vector3 position, Color32 color)
             {
-                indices.Add(vertices.Count);
-                vertices.Add(position);
-                colors.Add(color);
+                if (vertexCount == vertices.Length)
+                {
+                    System.Array.Resize(ref vertices, vertices.Length * 2);
+                    System.Array.Resize(ref colors, colors.Length * 2);
+                }
+
+                vertices[vertexCount] = position;
+                colors[vertexCount] = color;
+                vertexCount++;
                 hasChanged = true;
             }
 
@@ -121,9 +130,9 @@ namespace ArcaneOnyx.MeshGizmos
                 hasChanged = false;
                 Mesh ??= CreateMesh();
                 Mesh.Clear();
-                Mesh.SetVertices(vertices);
-                Mesh.SetColors(colors);
-                Mesh.SetIndices(indices, topology, 0);
+                Mesh.SetVertices(vertices, 0, vertexCount);
+                Mesh.SetColors(colors, 0, vertexCount);
+                Mesh.SetIndices(CountingIndicesUpTo(vertexCount), 0, vertexCount, topology, 0);
             }
 
             public void Dispose()
@@ -143,6 +152,20 @@ namespace ArcaneOnyx.MeshGizmos
                 }
 
                 Mesh = null;
+            }
+
+            private int[] CountingIndicesUpTo(int count)
+            {
+                if (countingIndices.Length < count)
+                {
+                    countingIndices = new int[Mathf.NextPowerOfTwo(count)];
+                    for (var index = 0; index < countingIndices.Length; index++)
+                    {
+                        countingIndices[index] = index;
+                    }
+                }
+
+                return countingIndices;
             }
 
             //Thirty-two-bit indices: a debug picture passes 65 535 vertices long before it stops being useful.

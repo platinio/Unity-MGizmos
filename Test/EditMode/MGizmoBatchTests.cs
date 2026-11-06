@@ -106,6 +106,22 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         }
 
         [Test]
+        public void ABatchRefilledWithLess_DrawsOnlyWhatItHoldsNow()
+        {
+            batch.AddLine(Vector3.zero, Vector3.up, Red);
+            batch.AddLine(Vector3.zero, Vector3.down, Red);
+            batch.AddLine(Vector3.zero, Vector3.left, Red);
+            MGizmos.RenderBatch(batch);
+
+            batch.Clear();
+            batch.AddLine(Vector3.zero, Vector3.forward, Blue);
+            var mesh = MeshesOf(MGizmos.RenderBatch(batch))[0];
+
+            Assert.AreEqual(2, mesh.vertexCount);
+            Assert.AreEqual(2, mesh.GetIndices(0).Length, "indices left over from the bigger picture would draw lines that are gone");
+        }
+
+        [Test]
         public void ABatchPastSixteenBitIndices_KeepsEveryLine()
         {
             const int lineCount = 40000;

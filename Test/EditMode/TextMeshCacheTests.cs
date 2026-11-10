@@ -12,6 +12,7 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         private const int NextFrame = 2;
 
         private readonly List<Mesh> retired = new();
+        private readonly List<Mesh> created = new();
         private Font font;
         private Font otherFont;
 
@@ -19,6 +20,7 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         public void SetUp()
         {
             retired.Clear();
+            created.Clear();
             font = Font.CreateDynamicFontFromOSFont("Arial", 16);
             otherFont = Font.CreateDynamicFontFromOSFont("Arial", 16);
         }
@@ -26,6 +28,7 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         [TearDown]
         public void TearDown()
         {
+            foreach (var mesh in created) Object.DestroyImmediate(mesh);
             Object.DestroyImmediate(font);
             Object.DestroyImmediate(otherFont);
         }
@@ -33,8 +36,15 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         private TextMeshCache CacheWith(int sizeBeforeEviction, int sizeBeforeClearing, params string[] keysBuiltInTheFirstFrame)
         {
             var cache = new TextMeshCache(sizeBeforeEviction, sizeBeforeClearing, retired.Add);
-            foreach (var key in keysBuiltInTheFirstFrame) cache.Add(key, new Mesh(), font, FirstFrame);
+            foreach (var key in keysBuiltInTheFirstFrame) cache.Add(key, NewMesh(), font, FirstFrame);
             return cache;
+        }
+
+        private Mesh NewMesh()
+        {
+            var mesh = new Mesh();
+            created.Add(mesh);
+            return mesh;
         }
 
         private static bool Holds(TextMeshCache cache, string key) => cache.TryGet(key, NextFrame, out _);
@@ -46,7 +56,7 @@ namespace ArcaneOnyx.MeshGizmos.Tests
             cache.TryGet("a", FirstFrame, out var meshOfA);
             int version = cache.Version;
 
-            cache.Add("c", new Mesh(), font, NextFrame);
+            cache.Add("c", NewMesh(), font, NextFrame);
 
             Assert.AreEqual(1, cache.Count);
             CollectionAssert.Contains(retired, meshOfA);
@@ -60,7 +70,7 @@ namespace ArcaneOnyx.MeshGizmos.Tests
             var cache = CacheWith(HoldsTwo, NeverClears, "a", "b");
 
             cache.MarkUsed("a", NextFrame);
-            cache.Add("c", new Mesh(), font, NextFrame);
+            cache.Add("c", NewMesh(), font, NextFrame);
 
             Assert.IsTrue(Holds(cache, "a"));
             Assert.IsFalse(Holds(cache, "b"));
@@ -72,7 +82,7 @@ namespace ArcaneOnyx.MeshGizmos.Tests
             var cache = CacheWith(HoldsTwo, NeverClears, "a", "b");
 
             cache.TryGet("a", NextFrame, out _);
-            cache.Add("c", new Mesh(), font, NextFrame);
+            cache.Add("c", NewMesh(), font, NextFrame);
 
             Assert.IsTrue(Holds(cache, "a"));
             Assert.IsFalse(Holds(cache, "b"));
@@ -92,7 +102,7 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         {
             var cache = CacheWith(HoldsTwo, 3, "a", "b", "c");
 
-            cache.Add("d", new Mesh(), font, FirstFrame);
+            cache.Add("d", NewMesh(), font, FirstFrame);
 
             Assert.AreEqual(1, cache.Count);
             Assert.AreEqual(3, retired.Count);
@@ -103,7 +113,7 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         public void InvalidatingAFont_DropsOnlyThatFontsLabels()
         {
             var cache = CacheWith(HoldsTwo, NeverClears, "a");
-            cache.Add("other", new Mesh(), otherFont, FirstFrame);
+            cache.Add("other", NewMesh(), otherFont, FirstFrame);
             int version = cache.Version;
 
             cache.InvalidateFont(otherFont);

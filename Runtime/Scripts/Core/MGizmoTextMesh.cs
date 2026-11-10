@@ -10,12 +10,24 @@ namespace ArcaneOnyx.MeshGizmos
     //Meshes are cached by text+size and reused, so calling this every frame (e.g. a hover label) does not
     //leak a mesh per call. The cache is cleared whenever the font atlas is rebuilt, because that
     //invalidates the glyph UVs the cached meshes baked in.
+    //
+    //A full cache evicts only labels not built this frame: a mesh already handed to a draw call this frame
+    //must survive until it renders, so a frame with more labels than the cache holds grows it instead.
     public static class MGizmoTextMesh
     {
         private const int RenderFontSize = 64;
-        private const int MaxCacheSize = 64;
+        private const int CacheSizeBeforeEviction = 64;
+        //the backstop when nothing can be evicted, e.g. in edit mode where the frame count may not advance
+        private const int CacheSizeBeforeClearing = 1024;
 
-        private static readonly Dictionary<string, Mesh> cache = new();
+        private static readonly Dictionary<string, CachedText> cache = new();
+        private static readonly List<string> keysToEvict = new();
+
+        private struct CachedText
+        {
+            public Mesh Mesh;
+            public int LastUsedFrame;
+        }
 
         static MGizmoTextMesh()
         {
@@ -28,7 +40,11 @@ namespace ArcaneOnyx.MeshGizmos
             if (string.IsNullOrEmpty(text) || font == null) return null;
 
             string key = size.ToString("0.###") + ":" + text;
-            if (cache.TryGetValue(key, out var cached) && cached != null) return cached;
+            if (cache.TryGetValue(key, out var cached) && cached.Mesh != null)
+            {
+                cache[key] = new CachedText { Mesh = cached.Mesh, LastUsedFrame = Time.frameCount };
+                return cached.Mesh;
+            }
 
             //make sure every glyph we need is in the atlas before we read its UVs
             font.RequestCharactersInTexture(text, RenderFontSize, FontStyle.Normal);
@@ -100,8 +116,8 @@ namespace ArcaneOnyx.MeshGizmos
             mesh.SetTriangles(triangles, 0);
             mesh.RecalculateBounds();
 
-            if (cache.Count >= MaxCacheSize) ClearCache();
-            cache[key] = mesh;
+            MakeRoom();
+            cache[key] = new CachedText { Mesh = mesh, LastUsedFrame = Time.frameCount };
             return mesh;
         }
 
@@ -119,11 +135,33 @@ namespace ArcaneOnyx.MeshGizmos
             return width;
         }
 
+        private static void MakeRoom()
+        {
+            if (cache.Count >= CacheSizeBeforeClearing) ClearCache();
+            else if (cache.Count >= CacheSizeBeforeEviction) EvictTextNotUsedThisFrame();
+        }
+
+        private static void EvictTextNotUsedThisFrame()
+        {
+            keysToEvict.Clear();
+
+            foreach (var pair in cache)
+            {
+                if (pair.Value.LastUsedFrame != Time.frameCount) keysToEvict.Add(pair.Key);
+            }
+
+            foreach (var key in keysToEvict)
+            {
+                DestroyMesh(cache[key].Mesh);
+                cache.Remove(key);
+            }
+        }
+
         private static void OnFontTextureRebuilt(Font font) => ClearCache();
 
         private static void ClearCache()
         {
-            foreach (var mesh in cache.Values) DestroyMesh(mesh);
+            foreach (var cached in cache.Values) DestroyMesh(cached.Mesh);
             cache.Clear();
         }
 

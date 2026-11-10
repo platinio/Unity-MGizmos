@@ -16,6 +16,8 @@ namespace ArcaneOnyx.MeshGizmos
         [Header("Config")]
         [SerializeField] private Material defaultMaterial;
         [SerializeField] private Color defaultColor;
+        [SerializeField, Tooltip("Material MGizmos.RenderBatch draws with: it must colour each vertex by its own colour.")]
+        private Material vertexColorMaterial;
 
         [Header("Text")]
         [SerializeField, Tooltip("Font used by MGizmos.RenderText. Leave empty to fall back to a runtime " +
@@ -24,6 +26,7 @@ namespace ArcaneOnyx.MeshGizmos
 
         public Material DefaultMaterial => defaultMaterial;
         public Color DefaultColor => defaultColor;
+        public Material VertexColorMaterial => vertexColorMaterial;
         public Font TextFont => textFont;
     }
 }

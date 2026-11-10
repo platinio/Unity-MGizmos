@@ -587,6 +587,46 @@ namespace ArcaneOnyx.MeshGizmos
             return compositeMeshDrawCall;
         }
 
+        //Draws every line and triangle of the batch in its own colour, with two draw calls at most. The
+        //returned call is tinted white so the vertex colours show as they are; SetColor tints the whole batch.
+        public static MGizmoBaseDrawCall RenderBatch(MGizmoBatch batch)
+        {
+            if (!IsEnable) return inertDrawCall;
+            if (Config == null) return inertDrawCall;
+            if (Config.VertexColorMaterial == null)
+            {
+                WarnOnceThatBatchesHaveNoMaterial();
+                return inertDrawCall;
+            }
+
+            if (batch == null || batch.IsEmpty) return inertDrawCall;
+
+            batch.UploadChanges();
+
+            var compositeMeshDrawCall = MGizmoCompositeDrawCall.Get();
+            if (batch.LineCount > 0) compositeMeshDrawCall.AddDrawCall(WorldSpaceDrawCall(batch.LineMesh));
+            if (batch.TriangleCount > 0) compositeMeshDrawCall.AddDrawCall(WorldSpaceDrawCall(batch.TriangleMesh));
+
+            InitializeMeshDrawCall(compositeMeshDrawCall);
+            compositeMeshDrawCall.SetMaterial(Config.VertexColorMaterial).SetColor(Color.white);
+            return compositeMeshDrawCall;
+        }
+
+        private static MGizmoDrawCall WorldSpaceDrawCall(Mesh mesh)
+        {
+            return MGizmoDrawCall.Get(mesh, Vector3.zero, Quaternion.identity, Vector3.one);
+        }
+
+        private static bool hasWarnedThatBatchesHaveNoMaterial;
+
+        private static void WarnOnceThatBatchesHaveNoMaterial()
+        {
+            if (hasWarnedThatBatchesHaveNoMaterial) return;
+
+            hasWarnedThatBatchesHaveNoMaterial = true;
+            Debug.LogWarning("MGizmos.RenderBatch draws nothing: the MGizmosRendererConfig in use has no Vertex Color Material. Set it to VertexColorMaterial, shipped in the package's Runtime/Material folder.", Config);
+        }
+
         public static MGizmoBaseDrawCall RenderText(Vector3 position, string text) => RenderText(position, text, 0.25f);
 
         //Draws a text label. size is roughly the world height of a capital letter. When billboard is true

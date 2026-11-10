@@ -4,19 +4,20 @@ using UnityEngine;
 
 namespace ArcaneOnyx.MeshGizmos.Tests
 {
-    /// <summary>The text mesh cache never destroys a label the current frame still has to draw.</summary>
     public class MGizmoTextMeshTests
     {
         private const float LabelSize = 0.25f;
         private const int MoreLabelsThanTheCacheHolds = 100;
         private const string EveryGlyphTheLabelsUse = "label 0123456789";
 
+        private static Font BuiltinFont() => Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+
         [Test]
         public void MoreLabelsInOneFrameThanTheCacheHolds_AllKeepTheirMeshes()
         {
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var font = BuiltinFont();
             // Requesting the glyphs up front keeps an atlas rebuild, which rightly clears the cache, out of the test.
-            font.RequestCharactersInTexture(EveryGlyphTheLabelsUse, 64, FontStyle.Normal);
+            font.RequestCharactersInTexture(EveryGlyphTheLabelsUse, MGizmoTextMesh.RenderFontSize, FontStyle.Normal);
 
             var meshes = new List<Mesh>();
             for (int i = 0; i < MoreLabelsThanTheCacheHolds; i++)
@@ -31,9 +32,21 @@ namespace ArcaneOnyx.MeshGizmos.Tests
         [Test]
         public void TheSameLabel_ReusesItsMesh()
         {
-            var font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
+            var font = BuiltinFont();
 
             Assert.AreSame(MGizmoTextMesh.Build("label 7", font, LabelSize), MGizmoTextMesh.Build("label 7", font, LabelSize));
+        }
+
+        [Test]
+        public void AKeptLabelWhoseMeshWasDestroyed_RebuildsItWhenDrawn()
+        {
+            var label = MGizmos.RenderText(Vector3.zero, "kept label", LabelSize);
+            Assume.That(label, Is.InstanceOf<MGizmoTextDrawCall>(), "MGizmos must be enabled and configured to draw text.");
+            Object.DestroyImmediate(DrawCallProbe.MeshOf(label));
+
+            label.Draw(null, 0f);
+
+            Assert.IsTrue(DrawCallProbe.MeshOf(label) != null);
         }
     }
 }

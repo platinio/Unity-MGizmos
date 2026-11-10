@@ -7,27 +7,18 @@ namespace ArcaneOnyx.MeshGizmos
     //the same Graphics.DrawMesh path as every other gizmo. The block is centred on the local origin so a
     //billboard draw call can face it at the camera. Pair it with the font's material (font.material).
     //
-    //Meshes are cached by text+size and reused, so calling this every frame (e.g. a hover label) does not
-    //leak a mesh per call. The cache is cleared whenever the font atlas is rebuilt, because that
-    //invalidates the glyph UVs the cached meshes baked in.
-    //
-    //A full cache evicts only labels not built this frame: a mesh already handed to a draw call this frame
-    //must survive until it renders, so a frame with more labels than the cache holds grows it instead.
+    //Meshes are cached by font, size and text and reused, so calling this every frame (e.g. a hover label)
+    //does not leak a mesh per call. A full cache evicts the labels nobody built or drew this frame (see
+    //TextMeshCache), and the cache is cleared whenever the font atlas is rebuilt, because that invalidates
+    //the glyph UVs the cached meshes baked in. A label kept across frames rebuilds its mesh when it finds it
+    //gone (see MGizmoTextDrawCall).
     public static class MGizmoTextMesh
     {
-        private const int RenderFontSize = 64;
+        internal const int RenderFontSize = 64;
         private const int CacheSizeBeforeEviction = 64;
-        //the backstop when nothing can be evicted, e.g. in edit mode where the frame count may not advance
         private const int CacheSizeBeforeClearing = 1024;
 
-        private static readonly Dictionary<string, CachedText> cache = new();
-        private static readonly List<string> keysToEvict = new();
-
-        private struct CachedText
-        {
-            public Mesh Mesh;
-            public int LastUsedFrame;
-        }
+        private static readonly TextMeshCache cache = new(CacheSizeBeforeEviction, CacheSizeBeforeClearing);
 
         static MGizmoTextMesh()
         {
@@ -39,12 +30,8 @@ namespace ArcaneOnyx.MeshGizmos
         {
             if (string.IsNullOrEmpty(text) || font == null) return null;
 
-            string key = size.ToString("0.###") + ":" + text;
-            if (cache.TryGetValue(key, out var cached) && cached.Mesh != null)
-            {
-                cache[key] = new CachedText { Mesh = cached.Mesh, LastUsedFrame = Time.frameCount };
-                return cached.Mesh;
-            }
+            string key = KeyOf(text, font, size);
+            if (cache.TryGet(key, Time.frameCount, out var cached)) return cached;
 
             //make sure every glyph we need is in the atlas before we read its UVs
             font.RequestCharactersInTexture(text, RenderFontSize, FontStyle.Normal);
@@ -116,8 +103,7 @@ namespace ArcaneOnyx.MeshGizmos
             mesh.SetTriangles(triangles, 0);
             mesh.RecalculateBounds();
 
-            MakeRoom();
-            cache[key] = new CachedText { Mesh = mesh, LastUsedFrame = Time.frameCount };
+            cache.Add(key, mesh, Time.frameCount);
             return mesh;
         }
 
@@ -135,41 +121,13 @@ namespace ArcaneOnyx.MeshGizmos
             return width;
         }
 
-        private static void MakeRoom()
-        {
-            if (cache.Count >= CacheSizeBeforeClearing) ClearCache();
-            else if (cache.Count >= CacheSizeBeforeEviction) EvictTextNotUsedThisFrame();
-        }
+        /// <summary>The cache key of a label: the font matters too, because the mesh holds that font's atlas UVs.</summary>
+        internal static string KeyOf(string text, Font font, float size)
+            => font.GetInstanceID() + ":" + size.ToString("0.###") + ":" + text;
 
-        private static void EvictTextNotUsedThisFrame()
-        {
-            keysToEvict.Clear();
+        /// <summary>A label drawn again this frame without being rebuilt: keeps its mesh out of eviction.</summary>
+        internal static void MarkUsed(string key) => cache.MarkUsed(key, Time.frameCount);
 
-            foreach (var pair in cache)
-            {
-                if (pair.Value.LastUsedFrame != Time.frameCount) keysToEvict.Add(pair.Key);
-            }
-
-            foreach (var key in keysToEvict)
-            {
-                DestroyMesh(cache[key].Mesh);
-                cache.Remove(key);
-            }
-        }
-
-        private static void OnFontTextureRebuilt(Font font) => ClearCache();
-
-        private static void ClearCache()
-        {
-            foreach (var cached in cache.Values) DestroyMesh(cached.Mesh);
-            cache.Clear();
-        }
-
-        private static void DestroyMesh(Mesh mesh)
-        {
-            if (mesh == null) return;
-            if (Application.isPlaying) Object.Destroy(mesh);
-            else Object.DestroyImmediate(mesh);
-        }
+        private static void OnFontTextureRebuilt(Font font) => cache.Clear();
     }
 }

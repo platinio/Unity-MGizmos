@@ -8,7 +8,8 @@ namespace ArcaneOnyx.MeshGizmos
     //gets its own clone (see MGizmos.AddMeshDrawCall), so each clone faces its own camera. The glyph mesh
     //is built by MGizmoTextMesh and drawn with the font's material, whose GUI/Text shader is double-sided
     //and tints by colour. It remembers its text so a label kept across frames (in a group, or with a
-    //duration) keeps its cached mesh in use, and rebuilds it if an eviction or an atlas rebuild destroyed it.
+    //duration) keeps its cached mesh in use, and builds it again once MGizmoTextMesh.Version says the mesh
+    //stopped being valid (an eviction or an atlas rebuild). A label made from a bare mesh has no text.
     public class MGizmoTextDrawCall : MGizmoDrawCall
     {
         private bool billboard;
@@ -16,6 +17,7 @@ namespace ArcaneOnyx.MeshGizmos
         private Font font;
         private float size;
         private string cacheKey;
+        private int meshVersion;
 
         //recycles the per-camera clones MGizmos creates and destroys - see Clone/Release
         private static readonly Stack<MGizmoTextDrawCall> pool = new();
@@ -40,7 +42,9 @@ namespace ArcaneOnyx.MeshGizmos
             dc.billboard = billboard;
             dc.text = null;
             dc.font = null;
+            dc.size = 0f;
             dc.cacheKey = null;
+            dc.meshVersion = 0;
             return dc;
         }
 
@@ -51,6 +55,7 @@ namespace ArcaneOnyx.MeshGizmos
             this.font = font;
             this.size = size;
             cacheKey = MGizmoTextMesh.KeyOf(text, font, size);
+            meshVersion = MGizmoTextMesh.Version;
         }
 
         public override void Draw(Camera camera, float deltaTime)
@@ -72,9 +77,21 @@ namespace ArcaneOnyx.MeshGizmos
         {
             if (cacheKey == null) return;
 
-            if (mesh == null) mesh = MGizmoTextMesh.Build(text, font, size);
-            else MGizmoTextMesh.MarkUsed(cacheKey);
+            if (IsMeshStale())
+            {
+                mesh = MGizmoTextMesh.Build(text, font, size);
+
+                //read after Build: requesting the glyphs can itself rebuild the atlas, and the mesh that came back
+                //was built after that
+                meshVersion = MGizmoTextMesh.Version;
+            }
+            else
+            {
+                MGizmoTextMesh.MarkUsed(cacheKey);
+            }
         }
+
+        private bool IsMeshStale() => mesh == null || meshVersion != MGizmoTextMesh.Version;
 
         public override MGizmoBaseDrawCall Clone()
         {
@@ -87,6 +104,7 @@ namespace ArcaneOnyx.MeshGizmos
             dc.font = font;
             dc.size = size;
             dc.cacheKey = cacheKey;
+            dc.meshVersion = meshVersion;
             return dc;
         }
 
